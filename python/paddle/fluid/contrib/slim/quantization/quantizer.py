@@ -70,6 +70,11 @@ class Quantizer(object):
         }
         test_graph = graph.clone(for_test=True).prune(feeds, fetches)
         self._performer.freeze_graph(test_graph, place, scope)
+
+        #save_inference_graph_model(
+        #    dirname+'_server', [feed_var.name for feed_var in feeds],
+        #    [fetch_var.name for fetch_var in fetches], exe, test_graph)
+
         if save_as_int8:
             self._performer.convert_to_int8(test_graph, place, scope)
         if target_device in convert_funcs.keys():
