@@ -183,6 +183,8 @@ class Graph {
     return nullptr;
   }
 
+  const ProgramDesc &Program() const { return program_; }
+
   void ResolveHazard(
       const std::map<std::string, std::vector<ir::Node *>> &var_nodes);
 

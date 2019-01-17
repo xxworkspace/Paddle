@@ -224,11 +224,13 @@ ParallelExecutor::ParallelExecutor(
     }
   }
 
+  std::unique_ptr<ir::Graph> graph(new ir::Graph(main_program));
+
   // FIXME(Yancey1989): parallel graph mode get better performance
   // in GPU allreduce distributed training. Need an elegant way to
   // choice the execution strategy.
   build_strategy.enable_parallel_graph_ =
-      EnableParallelGraphExecution(main_program, exec_strategy, build_strategy);
+      EnableParallelGraphExecution(*graph, exec_strategy, build_strategy);
 
   VLOG(1) << "Enable ParallelGraph Execution: "
           << build_strategy.enable_parallel_graph_;
@@ -269,22 +271,23 @@ ParallelExecutor::ParallelExecutor(
 #if defined(PADDLE_WITH_CUDA) && !defined(_WIN32)
   if (build_strategy.enable_parallel_graph_) {
     for (size_t i = 0; i < member_->places_.size(); ++i) {
-      std::unique_ptr<ir::Graph> graph = build_strategy.Apply(
-          main_program, {member_->places_[i]}, loss_var_name,
-          {member_->local_scopes_[i]}, member_->nranks_, member_->use_cuda_,
-          member_->nccl_ctxs_.get());
+      graph = build_strategy.Apply(std::move(graph), {member_->places_[i]},
+                                   loss_var_name, {member_->local_scopes_[i]},
+                                   member_->nranks_, member_->use_cuda_,
+                                   member_->nccl_ctxs_.get());
       graphs.push_back(std::move(graph));
     }
   } else {
-    std::unique_ptr<ir::Graph> graph = build_strategy.Apply(
-        main_program, member_->places_, loss_var_name, member_->local_scopes_,
-        member_->nranks_, member_->use_cuda_, member_->nccl_ctxs_.get());
+    graph =
+        build_strategy.Apply(std::move(graph), member_->places_, loss_var_name,
+                             member_->local_scopes_, member_->nranks_,
+                             member_->use_cuda_, member_->nccl_ctxs_.get());
     graphs.push_back(std::move(graph));
   }
 #else
-  std::unique_ptr<ir::Graph> graph = build_strategy.Apply(
-      main_program, member_->places_, loss_var_name, member_->local_scopes_,
-      member_->nranks_, member_->use_cuda_);
+  graph = build_strategy.Apply(std::move(graph), member_->places_,
+                               loss_var_name, member_->local_scopes_,
+                               member_->nranks_, member_->use_cuda_);
   graphs.push_back(std::move(graph));
 #endif
   auto max_memory_size = GetEagerDeletionThreshold();
@@ -466,21 +469,41 @@ void ParallelExecutor::FeedAndSplitTensorIntoLocalScopes(
   }
 }
 
+std::vector<OpDesc *> AllOpDescs(const ir::Graph &graph) {
+  std::vector<OpDesc *> ops;
+  for (auto &n : ir::TopologySortOperations(graph)) {
+    if (n->IsOp() && n->Op()) {
+      ops.push_back(n->Op());
+    }
+  }
+  return ops;
+}
+
+std::vector<VarDesc *> AllVarDescs(const ir::Graph &graph) {
+  std::vector<VarDesc *> vars;
+  for (auto &n : graph.Nodes()) {
+    if (n->IsVar() && n->Var()) {
+      vars.push_back(n->Var());
+    }
+  }
+  return vars;
+}
+
 bool ParallelExecutor::EnableParallelGraphExecution(
-    const ProgramDesc &main_program, const ExecutionStrategy &exec_strategy,
+    const ir::Graph &graph, const ExecutionStrategy &exec_strategy,
     const BuildStrategy &build_strategy) const {
   if (!FLAGS_enable_parallel_graph) return false;
 
   bool enable_parallel_graph = true;
   // TODO(Yancey1989): support sparse update in ParallelGraph mode.
-  for (auto &var_desc : main_program.Block(0).AllVars()) {
+  for (auto &var_desc : AllVarDescs(graph)) {
     if (var_desc->GetType() == proto::VarType::SELECTED_ROWS) {
       enable_parallel_graph = false;
     }
   }
 
   // TODO(Yancey1989): support pserver mode
-  for (auto &op_desc : main_program.Block(0).AllOps()) {
+  for (auto &op_desc : AllOpDescs(graph)) {
     if (op_desc->Type() == "send" || op_desc->Type() == "recv") {
       enable_parallel_graph = false;
       break;
