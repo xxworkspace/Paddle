@@ -39,7 +39,10 @@ std::map<std::string, std::vector<ir::Node *>> Graph::InitFromProgram(
     all_vars.emplace(var->Name(), var);
   }
 
+  auto *all_ops = new std::vector<OpDesc *>();
+
   for (auto *op : program.Block(0).AllOps()) {
+    all_ops->emplace_back(op);
     ir::Node *node = CreateOpNode(op);
     // For input args, reuse the same var name if it was created before.
     // Otherwise, create a new one.
@@ -76,6 +79,8 @@ std::map<std::string, std::vector<ir::Node *>> Graph::InitFromProgram(
       var->inputs.push_back(node);
     }
   }
+
+  Set<const std::vector<OpDesc *>>("all_op_descs", all_ops);
   return std::move(var_nodes);
 }
 

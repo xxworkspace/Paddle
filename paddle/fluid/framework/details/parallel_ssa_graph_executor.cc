@@ -21,12 +21,12 @@ namespace details {
 ParallelSSAGraphExecutor::ParallelSSAGraphExecutor(
     const ExecutionStrategy &strategy, const std::vector<Scope *> &local_scopes,
     const std::vector<platform::Place> &places,
-    std::vector<std::unique_ptr<ir::Graph>> &&graphs)
+    const std::vector<ir::Graph *> &graphs)
     : strategy_(std::move(strategy)),
       local_scopes_(std::move(local_scopes)),
       pool_(places.size() >= 2 ? new ::ThreadPool(places.size()) : nullptr),
       places_(std::move(places)),
-      graphs_(std::move(graphs)) {
+      graphs_(graphs) {
   PADDLE_ENFORCE_EQ(places_.size(), local_scopes_.size());
 
   // set the correct size of thread pool to each device.
@@ -37,7 +37,7 @@ ParallelSSAGraphExecutor::ParallelSSAGraphExecutor(
           << " to run the operators of the graph on each device.";
   for (size_t i = 0; i < places.size(); ++i) {
     executors_.emplace_back(new details::ThreadedSSAGraphExecutor(
-        strategy_, {local_scopes_[i]}, {places_[i]}, std::move(graphs_[i])));
+        strategy_, {local_scopes_[i]}, {places_[i]}, graphs_[i]));
   }
 }
 

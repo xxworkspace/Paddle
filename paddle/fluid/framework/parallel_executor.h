@@ -46,7 +46,7 @@ class ParallelExecutor {
  public:
   explicit ParallelExecutor(const std::vector<platform::Place> &places,
                             const std::unordered_set<std::string> &bcast_vars,
-                            const ProgramDesc &main_program,
+                            std::shared_ptr<ir::Graph> graph,
                             const std::string &loss_var_name, Scope *scope,
                             const std::vector<Scope *> &local_scopes,
                             const ExecutionStrategy &exec_strategy,

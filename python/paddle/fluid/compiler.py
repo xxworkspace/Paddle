@@ -188,8 +188,11 @@ class CompiledProgram(object):
         ])
 
         places = list(map(_place_obj, self._places))
+
+        self._graph = core.Graph(self._program.desc)
+
         return core.ParallelExecutor(
-            places, self._persistable_vars, self._program.desc,
+            places, self._persistable_vars, self._graph,
             cpt.to_text(self._loss_name)
             if self._loss_name else six.u(''), self._scope, self._local_scopes,
             self._exec_strategy, self._build_strategy)

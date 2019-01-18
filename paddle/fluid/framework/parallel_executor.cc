@@ -191,7 +191,7 @@ std::vector<Scope *> &ParallelExecutor::GetLocalScopes() {
 ParallelExecutor::ParallelExecutor(
     const std::vector<platform::Place> &places,
     const std::unordered_set<std::string> &bcast_vars,
-    const ProgramDesc &main_program, const std::string &loss_var_name,
+    std::shared_ptr<ir::Graph> shared_graph, const std::string &loss_var_name,
     Scope *scope, const std::vector<Scope *> &local_scopes,
     const ExecutionStrategy &exec_strategy, const BuildStrategy &build_strategy)
     : member_(new ParallelExecutorPrivate(places)) {
@@ -224,7 +224,7 @@ ParallelExecutor::ParallelExecutor(
     }
   }
 
-  std::unique_ptr<ir::Graph> graph(new ir::Graph(main_program));
+  std::unique_ptr<ir::Graph> graph(shared_graph.get());
 
   // FIXME(Yancey1989): parallel graph mode get better performance
   // in GPU allreduce distributed training. Need an elegant way to
@@ -267,7 +267,7 @@ ParallelExecutor::ParallelExecutor(
 
   // Step 2. Convert main_program to SSA form and dependency graph. Also, insert
   // ncclOp
-  std::vector<std::unique_ptr<ir::Graph>> graphs;
+  std::vector<ir::Graph *> graphs;
 #if defined(PADDLE_WITH_CUDA) && !defined(_WIN32)
   if (build_strategy.enable_parallel_graph_) {
     for (size_t i = 0; i < member_->places_.size(); ++i) {
@@ -275,26 +275,29 @@ ParallelExecutor::ParallelExecutor(
                                    loss_var_name, {member_->local_scopes_[i]},
                                    member_->nranks_, member_->use_cuda_,
                                    member_->nccl_ctxs_.get());
-      graphs.push_back(std::move(graph));
+      graphs.push_back(graph.release());
     }
   } else {
     graph =
         build_strategy.Apply(std::move(graph), member_->places_, loss_var_name,
                              member_->local_scopes_, member_->nranks_,
                              member_->use_cuda_, member_->nccl_ctxs_.get());
-    graphs.push_back(std::move(graph));
+    graphs.push_back(graph.release());
   }
 #else
   graph = build_strategy.Apply(std::move(graph), member_->places_,
                                loss_var_name, member_->local_scopes_,
                                member_->nranks_, member_->use_cuda_);
-  graphs.push_back(std::move(graph));
+  graphs.push_back(graph.release());
 #endif
   auto max_memory_size = GetEagerDeletionThreshold();
   if (max_memory_size >= 0) {
     for (size_t i = 0; i < graphs.size(); ++i) {
-      graphs[i] = member_->PrepareGCAndRefCnts(
-          std::move(graphs[i]), static_cast<size_t>(max_memory_size));
+      graphs[i] =
+          member_
+              ->PrepareGCAndRefCnts(std::move(graph),
+                                    static_cast<size_t>(max_memory_size))
+              .release();
     }
   }
 
@@ -329,17 +332,14 @@ ParallelExecutor::ParallelExecutor(
 
   if (build_strategy.enable_parallel_graph_) {
     member_->executor_.reset(new details::ParallelSSAGraphExecutor(
-        exec_strategy, member_->local_scopes_, member_->places_,
-        std::move(graphs)));
+        exec_strategy, member_->local_scopes_, member_->places_, graphs));
   } else {
     if (exec_strategy.type_ == ExecutionStrategy::kDefault) {
       member_->executor_.reset(new details::ThreadedSSAGraphExecutor(
-          exec_strategy, member_->local_scopes_, member_->places_,
-          std::move(graphs[0])));
+          exec_strategy, member_->local_scopes_, member_->places_, graphs[0]));
     } else {
       member_->executor_.reset(new details::FastThreadedSSAGraphExecutor(
-          exec_strategy, member_->local_scopes_, member_->places_,
-          std::move(graphs[0])));
+          exec_strategy, member_->local_scopes_, member_->places_, graphs[0]));
     }
   }
 
