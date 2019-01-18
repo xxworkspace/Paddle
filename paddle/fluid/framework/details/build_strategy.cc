@@ -156,16 +156,6 @@ bool BuildStrategy::IsMultiDevPass(const std::string &pass_name) const {
   return framework::details::MultiDevSSAGraphBuilder().count(pass_name) > 0;
 }
 
-std::unique_ptr<std::vector<OpDesc *>> AllOpDescs(const ir::Graph &graph) {
-  std::unique_ptr<std::vector<OpDesc *>> ops(new std::vector<OpDesc *>());
-  for (auto &n : ir::TopologySortOperations(graph)) {
-    if (n->IsOp() && n->Op()) {
-      ops->push_back(n->Op());
-    }
-  }
-  return ops;
-}
-
 std::unique_ptr<ir::Graph> BuildStrategy::Apply(
     std::unique_ptr<ir::Graph> graph,
     const std::vector<platform::Place> &places,
@@ -198,14 +188,11 @@ std::unique_ptr<ir::Graph> BuildStrategy::Apply(
 #endif
 
     } else if (pass->Type() == "analysis_var_pass") {
-      const std::vector<OpDesc *> *all_op_descs = AllOpDescs(*graph).release();
-      graph->Set<const std::vector<OpDesc *>>(kAllOpDescs,
-                                              all_op_descs);  // take ownership
+      auto &all_ops = graph->Get<const std::vector<OpDesc *>>(kAllOpDescs);
       graph->Set<GraphNodePool>(kGraphNodePool,
                                 new GraphNodePool);  // take ownership
-
       pass->Erase(kAllOpDescs);
-      pass->SetNotOwned<const std::vector<OpDesc *>>(kAllOpDescs, all_op_descs);
+      pass->SetNotOwned<const std::vector<OpDesc *>>(kAllOpDescs, &all_ops);
 
     } else if (pass->Type() == "sequential_execution_pass") {
       LOG(INFO) << "set enable_sequential_execution:"
@@ -215,20 +202,16 @@ std::unique_ptr<ir::Graph> BuildStrategy::Apply(
         LOG(ERROR) << "program op: " << op->Type();
       }
 
-      auto *ops = AllOpDescs(*graph).release();
-      for (OpDesc *op : *ops) {
-        LOG(ERROR) << "graph op: " << op->Type();
-      }
-
       pass->Erase(kAllOpDescs);
-      pass->Set<const std::vector<OpDesc *>>(kAllOpDescs, ops);
+      auto &all_ops = graph->Get<const std::vector<OpDesc *>>(kAllOpDescs);
+      pass->SetNotOwned<const std::vector<OpDesc *>>(kAllOpDescs, &all_ops);
     } else if (pass->Type() == "all_reduce_deps_pass") {
       LOG(INFO) << "SeqOnlyAllReduceOps:" << SeqOnlyAllReduceOps(*this)
                 << ", num_trainers:" << num_trainers_;
 
       pass->Erase(kAllOpDescs);
-      pass->Set<const std::vector<OpDesc *>>(
-          kAllOpDescs, AllOpDescs(*graph).release());
+      auto &all_ops = graph->Get<const std::vector<OpDesc *>>(kAllOpDescs);
+      pass->Set<const std::vector<OpDesc *>>(kAllOpDescs, &all_ops);
     } else if (pass->Type() == "fuse_relu_depthwise_conv_pass") {
       if (!use_cuda) {
         LOG(WARNING) << "fuse_relu_depthwise_conv_pass is only supported on "

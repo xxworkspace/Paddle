@@ -495,18 +495,20 @@ bool ParallelExecutor::EnableParallelGraphExecution(
   if (!FLAGS_enable_parallel_graph) return false;
 
   bool enable_parallel_graph = true;
-  // TODO(Yancey1989): support sparse update in ParallelGraph mode.
-  for (auto &var_desc : AllVarDescs(graph)) {
-    if (var_desc->GetType() == proto::VarType::SELECTED_ROWS) {
-      enable_parallel_graph = false;
-    }
-  }
 
-  // TODO(Yancey1989): support pserver mode
-  for (auto &op_desc : AllOpDescs(graph)) {
-    if (op_desc->Type() == "send" || op_desc->Type() == "recv") {
-      enable_parallel_graph = false;
-      break;
+  for (ir::Node *node : graph.Nodes()) {
+    if (node->IsVar() && node->Var()) {
+      // TODO(Yancey1989): support sparse update in ParallelGraph mode.
+      if (node->Var()->GetType() == proto::VarType::SELECTED_ROWS) {
+        enable_parallel_graph = false;
+        break;
+      }
+    } else if (node->IsOp() && node->Op()) {
+      // TODO(Yancey1989): support pserver mode
+      if (node->Op()->Type() == "send" || node->Op()->Type() == "recv") {
+        enable_parallel_graph = false;
+        break;
+      }
     }
   }
 
