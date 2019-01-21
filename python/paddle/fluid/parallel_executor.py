@@ -179,7 +179,7 @@ class ParallelExecutor(object):
         places = list(map(place_obj, self._places))
 
         # step7: init ParallelExecutor
-        self._graph = core.Graph(self._program.desc)
+        self._graph = core.Graph(main.desc)
 
         self.executor = core.ParallelExecutor(
             places, persistable_vars, self._graph,
