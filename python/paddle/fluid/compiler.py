@@ -197,23 +197,24 @@ class CompiledProgram(object):
                 tps), "num_trainers == len(end_points)"
             self._build_strategy.trainers_endpoints = tps
 
-        self._persistable_vars = set([
-            cpt.to_text(v.name)
-            for v in [
-                var for var in self._program.list_vars()
-                if var.persistable and var.type != core.VarDesc.VarType.RAW
-            ]
-        ])
+        self._persistable_vars = []
+        for block_id in range(self._program_desc.num_blocks()):
+            bdesc = self._program_desc.block(block_id)
+            self._persistable_vars.extend([
+                cpt.to_text(v.name()) for v in bdesc.all_vars()
+                if v.persistable() and v.type() != core.VarDesc.VarType.RAW
+            ])
 
         places = list(map(_place_obj, self._places))
 
         self._graph = core.Graph(self._program_desc)
 
-        return core.ParallelExecutor(
-            places, self._persistable_vars, self._graph,
-            cpt.to_text(self._loss_name)
-            if self._loss_name else six.u(''), self._scope, self._local_scopes,
-            self._exec_strategy, self._build_strategy)
+        return core.ParallelExecutor(places,
+                                     set(self._persistable_vars), self._graph,
+                                     cpt.to_text(self._loss_name)
+                                     if self._loss_name else six.u(''),
+                                     self._scope, self._local_scopes,
+                                     self._exec_strategy, self._build_strategy)
 
     def _compile_inference(self):
         return core.create_paddle_predictor(self._infer_config)

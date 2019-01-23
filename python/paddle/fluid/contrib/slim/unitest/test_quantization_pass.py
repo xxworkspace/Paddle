@@ -24,12 +24,13 @@ from paddle.fluid import core
 
 
 def linear_fc(num):
-    data = fluid.layers.data(name='image', shape=[1, 32, 32], dtype='float32')
+    data = fluid.layers.data(name='image', shape=[1, 28, 28], dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
     hidden = data
     for _ in six.moves.xrange(num):
         hidden = fluid.layers.fc(hidden, size=128, act='relu')
-    loss = fluid.layers.cross_entropy(input=hidden, label=label)
+    fc = fluid.layers.fc(input=hidden, size=10)
+    loss = fluid.layers.softmax_with_cross_entropy(fc, label=label)
     loss = fluid.layers.mean(loss)
     return loss
 
@@ -52,7 +53,7 @@ def residual_block(num):
             bias_attr=bias_attr)
         return fluid.layers.batch_norm(input=tmp, act=act)
 
-    data = fluid.layers.data(name='image', shape=[1, 32, 32], dtype='float32')
+    data = fluid.layers.data(name='image', shape=[1, 28, 28], dtype='float32')
     label = fluid.layers.data(name='label', shape=[1], dtype='int64')
     hidden = data
     for _ in six.moves.xrange(num):
@@ -60,7 +61,7 @@ def residual_block(num):
         short = conv_bn_layer(hidden, 16, 1, 1, 0, act=None)
         hidden = fluid.layers.elementwise_add(x=conv, y=short, act='relu')
     fc = fluid.layers.fc(input=hidden, size=10)
-    loss = fluid.layers.cross_entropy(input=fc, label=label)
+    loss = fluid.layers.softmax_with_cross_entropy(fc, label)
     loss = fluid.layers.mean(loss)
     return loss
 
@@ -169,6 +170,32 @@ class TestQuantizationTransformPass(unittest.TestCase):
     def test_residual_block_range_abs_max(self):
         self.act_quant_op_type = 'fake_quantize_range_abs_max'
         self.residual_block_quant('range_abs_max')
+
+    def test_execute_graph(self):
+        main = fluid.Program()
+        startup = fluid.Program()
+        with fluid.program_guard(main, startup):
+            loss = linear_fc(3)
+            opt = fluid.optimizer.Adam(learning_rate=0.0001)
+            opt.minimize(loss)
+        exe = fluid.Executor(fluid.CPUPlace())
+        graph = IrGraph(core.Graph(main.desc), for_test=False)
+        exe.run(startup)
+        binary = fluid.CompiledProgram(graph.graph).with_data_parallel(
+            loss_name=loss.name)
+        for i in range(10):
+            loss_val = exe.run(binary,
+                               feed={
+                                   'image': np.ones(
+                                       [32, 784], dtype=np.float32),
+                                   'label': np.ones(
+                                       [32, 1], dtype=np.int64)
+                               },
+                               fetch_list=[loss])
+            if i == 0:
+                start_loss = np.sum(loss_val)
+            elif i == 9:
+                end_loss = np.sum(loss_val)
 
 
 if __name__ == '__main__':
