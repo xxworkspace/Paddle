@@ -169,8 +169,8 @@ std::unique_ptr<ir::Graph> BuildStrategy::Apply(
   // Create a default one if not finalized by user.
   CreatePassesFromStrategy(false);
 
+  std::vector<OpDesc *> all_ops = graph->OriginProgram().Block(0).AllOps();
   for (std::shared_ptr<ir::Pass> &pass : pass_builder_->AllPasses()) {
-    std::vector<OpDesc *> all_ops = graph->OriginProgram().Block(0).AllOps();
     if (IsMultiDevPass(pass->Type())) {
       pass->Erase(kPlaces);
       pass->SetNotOwned<const std::vector<platform::Place>>(kPlaces, &places);

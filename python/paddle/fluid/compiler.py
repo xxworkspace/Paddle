@@ -63,10 +63,10 @@ class CompiledProgram(object):
                                      fetch_list=[loss.name])
 
     Args:
-        program (Graph|Program): If it's Program, it will be first lowered to
-            a graph for further optimizations. If it's a graph (potentially
-            optimized before), it will be directly used for further
-            optimizations.
+        program_or_graph (Graph|Program): If it's Program, it will be first
+            lowered to a graph for further optimizations. If it's a graph
+            (potentially optimized before), it will be directly used for
+            further optimizations.
     """
 
     def __init__(self, program_or_graph):
@@ -76,9 +76,11 @@ class CompiledProgram(object):
         elif isinstance(program_or_graph, framework.Program):
             self._graph = core.Graph(program_or_graph.desc)
             self._program = program_or_graph
+        else:
+            raise ValueError("Wrong program_to_graph type: %s" %
+                             type(program_or_graph))
 
         self._program_desc = self._graph.origin_program_desc()
-        self._graph = None
         self._scope = None
         self._place = None
         self._executor = None
@@ -206,9 +208,6 @@ class CompiledProgram(object):
             ])
 
         places = list(map(_place_obj, self._places))
-
-        self._graph = core.Graph(self._program_desc)
-
         return core.ParallelExecutor(places,
                                      set(self._persistable_vars), self._graph,
                                      cpt.to_text(self._loss_name)
