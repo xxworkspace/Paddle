@@ -257,8 +257,8 @@ TEST(SortOpLikeDescOrder, AddOpDesc) {
 
   // cached desc different with real one
   // mimic the intermidiete pass modify the programdesc.
-  std::vector<OpDesc*> op_descs = graph.Get<const std::vector<OpDesc*>>(
-      details::kAllOpDescs);  // take ownership
+  std::vector<OpDesc*> op_descs =
+      graph.OriginProgram().Block(0).AllOps();  // take ownership
 
   auto op = prog.MutableBlock(0)->AppendOp();
   prog.MutableBlock(0)->Var("d1")->SetType(proto::VarType::LOD_TENSOR);
@@ -303,8 +303,8 @@ TEST(SortOpLikeDescOrder, AddAndDeleteOpDesc) {
     return ret;
   };
 
-  std::vector<OpDesc*> op_descs = graph.Get<const std::vector<OpDesc*>>(
-      details::kAllOpDescs);  // take ownership
+  std::vector<OpDesc*> op_descs =
+      graph.OriginProgram().Block(0).AllOps();  // take ownership
 
   // remove sum node
   ir::Node* found_node = nullptr;
@@ -367,8 +367,7 @@ TEST(SortOpLikeDescOrder, AddAndDeleteOpDesc) {
 TEST(SortOpLikeDescOrder, AddAndReplaceOpDescInplace) {
   auto prog = FillProgramDesc();
   ir::Graph graph(prog);
-  std::vector<OpDesc*> op_descs = graph.Get<const std::vector<OpDesc*>>(
-      details::kAllOpDescs);  // take ownership
+  std::vector<OpDesc*> op_descs = graph.OriginProgram().Block(0).AllOps();
 
   auto find_node_in_graph = [&](std::string s) {
     ir::Node* ret = nullptr;

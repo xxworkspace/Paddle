@@ -170,6 +170,7 @@ std::unique_ptr<ir::Graph> BuildStrategy::Apply(
   CreatePassesFromStrategy(false);
 
   for (std::shared_ptr<ir::Pass> &pass : pass_builder_->AllPasses()) {
+    std::vector<OpDesc *> all_ops = graph->OriginProgram().Block(0).AllOps();
     if (IsMultiDevPass(pass->Type())) {
       pass->Erase(kPlaces);
       pass->SetNotOwned<const std::vector<platform::Place>>(kPlaces, &places);
@@ -188,7 +189,6 @@ std::unique_ptr<ir::Graph> BuildStrategy::Apply(
 #endif
 
     } else if (pass->Type() == "analysis_var_pass") {
-      auto &all_ops = graph->Get<const std::vector<OpDesc *>>(kAllOpDescs);
       graph->Set<GraphNodePool>(kGraphNodePool,
                                 new GraphNodePool);  // take ownership
       pass->Erase(kAllOpDescs);
@@ -198,20 +198,14 @@ std::unique_ptr<ir::Graph> BuildStrategy::Apply(
       LOG(INFO) << "set enable_sequential_execution:"
                 << enable_sequential_execution_;
 
-      for (OpDesc *op : graph->Program().Block(0).AllOps()) {
-        LOG(ERROR) << "program op: " << op->Type();
-      }
-
       pass->Erase(kAllOpDescs);
-      auto &all_ops = graph->Get<const std::vector<OpDesc *>>(kAllOpDescs);
       pass->SetNotOwned<const std::vector<OpDesc *>>(kAllOpDescs, &all_ops);
     } else if (pass->Type() == "all_reduce_deps_pass") {
       LOG(INFO) << "SeqOnlyAllReduceOps:" << SeqOnlyAllReduceOps(*this)
                 << ", num_trainers:" << num_trainers_;
 
       pass->Erase(kAllOpDescs);
-      auto &all_ops = graph->Get<const std::vector<OpDesc *>>(kAllOpDescs);
-      pass->Set<const std::vector<OpDesc *>>(kAllOpDescs, &all_ops);
+      pass->SetNotOwned<const std::vector<OpDesc *>>(kAllOpDescs, &all_ops);
     } else if (pass->Type() == "fuse_relu_depthwise_conv_pass") {
       if (!use_cuda) {
         LOG(WARNING) << "fuse_relu_depthwise_conv_pass is only supported on "

@@ -190,9 +190,9 @@ std::vector<Scope *> &ParallelExecutor::GetLocalScopes() {
 
 ParallelExecutor::ParallelExecutor(
     const std::vector<platform::Place> &places,
-    const std::unordered_set<std::string> &bcast_vars,
-    std::shared_ptr<ir::Graph> shared_graph, const std::string &loss_var_name,
-    Scope *scope, const std::vector<Scope *> &local_scopes,
+    const std::unordered_set<std::string> &bcast_vars, ir::Graph *graph,
+    const std::string &loss_var_name, Scope *scope,
+    const std::vector<Scope *> &local_scopes,
     const ExecutionStrategy &exec_strategy, const BuildStrategy &build_strategy)
     : member_(new ParallelExecutorPrivate(places)) {
   member_->global_scope_ = scope;
@@ -224,13 +224,13 @@ ParallelExecutor::ParallelExecutor(
     }
   }
 
-  std::unique_ptr<ir::Graph> graph(shared_graph.get());
+  std::unique_ptr<ir::Graph> temp_owned_graph(graph);
 
   // FIXME(Yancey1989): parallel graph mode get better performance
   // in GPU allreduce distributed training. Need an elegant way to
   // choice the execution strategy.
-  build_strategy.enable_parallel_graph_ =
-      EnableParallelGraphExecution(*graph, exec_strategy, build_strategy);
+  build_strategy.enable_parallel_graph_ = EnableParallelGraphExecution(
+      *temp_owned_graph, exec_strategy, build_strategy);
 
   VLOG(1) << "Enable ParallelGraph Execution: "
           << build_strategy.enable_parallel_graph_;
@@ -271,31 +271,31 @@ ParallelExecutor::ParallelExecutor(
 #if defined(PADDLE_WITH_CUDA) && !defined(_WIN32)
   if (build_strategy.enable_parallel_graph_) {
     for (size_t i = 0; i < member_->places_.size(); ++i) {
-      graph = build_strategy.Apply(std::move(graph), {member_->places_[i]},
-                                   loss_var_name, {member_->local_scopes_[i]},
-                                   member_->nranks_, member_->use_cuda_,
-                                   member_->nccl_ctxs_.get());
-      graphs.push_back(graph.release());
+      temp_owned_graph = build_strategy.Apply(
+          std::move(temp_owned_graph), {member_->places_[i]}, loss_var_name,
+          {member_->local_scopes_[i]}, member_->nranks_, member_->use_cuda_,
+          member_->nccl_ctxs_.get());
+      graphs.push_back(temp_owned_graph.release());
     }
   } else {
-    graph =
-        build_strategy.Apply(std::move(graph), member_->places_, loss_var_name,
-                             member_->local_scopes_, member_->nranks_,
-                             member_->use_cuda_, member_->nccl_ctxs_.get());
-    graphs.push_back(graph.release());
+    temp_owned_graph = build_strategy.Apply(
+        std::move(temp_owned_graph), member_->places_, loss_var_name,
+        member_->local_scopes_, member_->nranks_, member_->use_cuda_,
+        member_->nccl_ctxs_.get());
+    graphs.push_back(temp_owned_graph.release());
   }
 #else
-  graph = build_strategy.Apply(std::move(graph), member_->places_,
-                               loss_var_name, member_->local_scopes_,
-                               member_->nranks_, member_->use_cuda_);
-  graphs.push_back(graph.release());
+  temp_owned_graph = build_strategy.Apply(
+      std::move(temp_owned_graph), member_->places_, loss_var_name,
+      member_->local_scopes_, member_->nranks_, member_->use_cuda_);
+  graphs.push_back(temp_owned_graph.release());
 #endif
   auto max_memory_size = GetEagerDeletionThreshold();
   if (max_memory_size >= 0) {
     for (size_t i = 0; i < graphs.size(); ++i) {
       graphs[i] =
           member_
-              ->PrepareGCAndRefCnts(std::move(graph),
+              ->PrepareGCAndRefCnts(std::unique_ptr<ir::Graph>(graphs[i]),
                                     static_cast<size_t>(max_memory_size))
               .release();
     }
@@ -467,26 +467,6 @@ void ParallelExecutor::FeedAndSplitTensorIntoLocalScopes(
       t->set_lod(lod_tensors[j].lod());
     }
   }
-}
-
-std::vector<OpDesc *> AllOpDescs(const ir::Graph &graph) {
-  std::vector<OpDesc *> ops;
-  for (auto &n : ir::TopologySortOperations(graph)) {
-    if (n->IsOp() && n->Op()) {
-      ops.push_back(n->Op());
-    }
-  }
-  return ops;
-}
-
-std::vector<VarDesc *> AllVarDescs(const ir::Graph &graph) {
-  std::vector<VarDesc *> vars;
-  for (auto &n : graph.Nodes()) {
-    if (n->IsVar() && n->Var()) {
-      vars.push_back(n->Var());
-    }
-  }
-  return vars;
 }
 
 bool ParallelExecutor::EnableParallelGraphExecution(

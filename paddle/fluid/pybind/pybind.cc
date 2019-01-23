@@ -1071,10 +1071,9 @@ All parameter, weight, gradient are variables in Paddle.
                 cannot be updated after being finalized.)DOC");
 
   pe.def(py::init<const std::vector<platform::Place> &,
-                  const std::unordered_set<std::string> &,
-                  std::shared_ptr<ir::Graph>, const std::string &, Scope *,
-                  std::vector<Scope *> &, const ExecutionStrategy &,
-                  const BuildStrategy &>())
+                  const std::unordered_set<std::string> &, ir::Graph *,
+                  const std::string &, Scope *, std::vector<Scope *> &,
+                  const ExecutionStrategy &, const BuildStrategy &>())
       // NOTE: even we return a vec<Scope*>* to Python use reference policy.
       // We still cannot get local_scope from this vector, since the element
       // of vec<Scope*> will be freed by Python GC. We can only return Scope*
