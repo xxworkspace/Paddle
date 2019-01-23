@@ -392,10 +392,8 @@ bool AnalysisVarPass::OpHasSubBlock(OpDesc* desc) const {
 }
 
 std::vector<ir::Node*> SortOpLikeDescOrder(const ir::Graph& graph) {
-  PADDLE_ENFORCE(graph.Has(kAllOpDescs),
-                 "Graph has no attribute of kAllOpDescs.");
   // 1. get op desc order
-  auto& op_descs = graph.Get<const std::vector<OpDesc*>>(kAllOpDescs);
+  std::vector<OpDesc*> op_descs = graph.OriginProgram().Block(0).AllOps();
 
   // 2. topology sort order
   auto nodes = graph.Nodes();
@@ -652,5 +650,4 @@ ir::Node* ControlFlowGraph::GetNodeFromVarName(const std::string& name,
 }  // namespace paddle
 
 REGISTER_PASS(analysis_var_pass, paddle::framework::details::AnalysisVarPass)
-    .RequireGraphAttr(paddle::framework::details::kGraphNodePool)
-    .RequireGraphAttr(paddle::framework::details::kAllOpDescs);
+    .RequireGraphAttr(paddle::framework::details::kGraphNodePool);

@@ -178,24 +178,26 @@ class TestQuantizationTransformPass(unittest.TestCase):
             loss = linear_fc(3)
             opt = fluid.optimizer.Adam(learning_rate=0.0001)
             opt.minimize(loss)
-        exe = fluid.Executor(fluid.CPUPlace())
-        graph = IrGraph(core.Graph(main.desc), for_test=False)
-        exe.run(startup)
-        binary = fluid.CompiledProgram(graph.graph).with_data_parallel(
-            loss_name=loss.name)
-        for i in range(10):
-            loss_val = exe.run(binary,
-                               feed={
-                                   'image': np.ones(
-                                       [32, 784], dtype=np.float32),
-                                   'label': np.ones(
-                                       [32, 1], dtype=np.int64)
-                               },
-                               fetch_list=[loss])
-            if i == 0:
-                start_loss = np.sum(loss_val)
-            elif i == 9:
-                end_loss = np.sum(loss_val)
+
+            exe = fluid.Executor(fluid.CPUPlace())
+            graph = IrGraph(core.Graph(main.desc), for_test=False)
+            exe.run(startup)
+            binary = fluid.CompiledProgram(graph.graph).with_data_parallel(
+                loss_name=loss.name)
+            for i in range(10):
+                loss_val = exe.run(binary,
+                                   feed={
+                                       'image': np.ones(
+                                           [32, 784], dtype=np.float32),
+                                       'label': np.ones(
+                                           [32, 1], dtype=np.int64)
+                                   },
+                                   fetch_list=[loss])
+                if i == 0:
+                    start_loss = np.sum(loss_val)
+                elif i == 9:
+                    end_loss = np.sum(loss_val)
+            self.assertLess(end_loss, start_loss)
 
 
 if __name__ == '__main__':
