@@ -834,6 +834,9 @@ All parameter, weight, gradient are variables in Paddle.
            [](ir::PassBuilder &self, size_t idx) { self.RemovePass(idx); });
 
   // -- python binds for parallel executor.
+  m.def("_enable_parallel_graph_execution",
+        framework::EnableParallelGraphExecution);
+
   py::class_<ParallelExecutor> pe(m, "ParallelExecutor");
   py::class_<ExecutionStrategy> exec_strategy(pe, "ExecutionStrategy", R"DOC(
     ExecutionStrategy allows the user to more preciously control how to run
@@ -1068,12 +1071,21 @@ All parameter, weight, gradient are variables in Paddle.
            },
            R"DOC(Allow user to customized passes. Normally model-specific
                 optimization passes should be defined in this way. BuildStrategy
-                cannot be updated after being finalized.)DOC");
+                cannot be updated after being finalized.)DOC")
+      .def_property(
+          "_enable_parallel_graph",
+          [](const BuildStrategy &self) { return self.enable_parallel_graph_; },
+          [](BuildStrategy &self, bool b) {
+            PADDLE_ENFORCE(!self.IsFinalized(), "BuildStrategy is finlaized.");
+            self.enable_parallel_graph_ = b;
+          },
+          R"DOC(Don't use, will be depcareted.)DOC");
 
   pe.def(py::init<const std::vector<platform::Place> &,
-                  const std::unordered_set<std::string> &, ir::Graph *,
-                  const std::string &, Scope *, std::vector<Scope *> &,
-                  const ExecutionStrategy &, const BuildStrategy &>())
+                  const std::unordered_set<std::string> &,
+                  const std::vector<ir::Graph *> &, const std::string &,
+                  Scope *, std::vector<Scope *> &, const ExecutionStrategy &,
+                  const BuildStrategy &>())
       // NOTE: even we return a vec<Scope*>* to Python use reference policy.
       // We still cannot get local_scope from this vector, since the element
       // of vec<Scope*> will be freed by Python GC. We can only return Scope*
