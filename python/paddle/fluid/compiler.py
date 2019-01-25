@@ -66,7 +66,8 @@ class CompiledProgram(object):
         program_or_graph (Graph|Program): If it's Program, it will be first
             lowered to a graph for further optimizations. If it's a graph
             (potentially optimized before), it will be directly used for
-            further optimizations.
+            further optimizations. Note: graph is only supported when compiled
+            with with_data_parallel option.
     """
 
     def __init__(self, program_or_graph):
@@ -215,7 +216,9 @@ class CompiledProgram(object):
         self._build_strategy._enable_parallel_graph = \
             core._enable_parallel_graph_execution(self._graph,
                                                   self._exec_strategy,
-                                                  self._build_strategy)
+                                                  self._build_strategy) and \
+            self._program
+
         self._pe_graphs = [self._graph]
         if self._build_strategy._enable_parallel_graph:
             for _ in range(len(places) - 1):
