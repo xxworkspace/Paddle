@@ -76,6 +76,7 @@ std::map<std::string, std::vector<ir::Node *>> Graph::InitFromProgram(
       var->inputs.push_back(node);
     }
   }
+
   return std::move(var_nodes);
 }
 

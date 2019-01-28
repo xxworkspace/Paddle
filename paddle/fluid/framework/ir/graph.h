@@ -183,6 +183,12 @@ class Graph {
     return nullptr;
   }
 
+  // Returns reference to the original program.
+  // WARN: After a series of passes, the current graph can be quite
+  // different from OriginProgram. Caller shouldn't assume much from
+  // the returned OriginProgram.
+  const ProgramDesc &OriginProgram() const { return program_; }
+
   void ResolveHazard(
       const std::map<std::string, std::vector<ir::Node *>> &var_nodes);
 
