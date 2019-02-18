@@ -124,6 +124,13 @@ inference_analysis_api_test_with_fake_data(test_analyzer_googlenet
 inference_analysis_api_test_with_fake_data(test_analyzer_resnet50
   "${INFERENCE_DEMO_INSTALL_DIR}/resnet50" analyzer_resnet50_tester.cc "resnet50_model.tar.gz" SERIAL)
 
+# deeplabv3+
+set(DEEPLABV3P_INSTALL_DIR "${INFERENCE_DEMO_INSTALL_DIR}/deeplabv3p")
+download_model_and_data(${DEEPLABV3P_INSTALL_DIR} "deeplabv3p.tar.gz" "deeplabv3p_imgs.bin.tar.gz" "deeplabv3p_labels.bin.tar.gz")
+inference_analysis_test(test_analyzer_deeplabv3p SRCS analyzer_deeplabv3plus_tester.cc
+    EXTRA_DEPS ${INFERENCE_EXTRA_DEPS}
+    ARGS --infer_model=${DEEPLABV3P_INSTALL_DIR}/model --infer_data=${DEEPLABV3P_INSTALL_DIR}/imgs.bin --infer_label=${DEEPLABV3P_INSTALL_DIR}/labels.bin SERIAL)
+
 # mobilenet with depthwise_conv op
 inference_analysis_api_test_with_fake_data(test_analyzer_mobilenet_depthwise_conv
   "${INFERENCE_DEMO_INSTALL_DIR}/mobilenet_depthwise_conv" analyzer_resnet50_tester.cc "mobilenet_model.tar.gz" SERIAL)

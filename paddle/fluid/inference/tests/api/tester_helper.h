@@ -17,8 +17,13 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstdlib>
+#include <fstream>
+#include <memory>
 #include <string>
 #include <thread>  // NOLINT
+#include <unordered_map>
+#include <utility>
 #include <vector>
 #ifdef WITH_GPERFTOOLS
 #include <gperftools/profiler.h>
@@ -87,6 +92,14 @@ void CompareResult(const std::vector<PaddleTensor> &outputs,
         }
         break;
       }
+      case PaddleDType::INT32: {
+        int32_t *pdata = static_cast<int32_t *>(out.data.data());
+        int32_t *pdata_ref = static_cast<int32_t *>(ref_out.data.data());
+        for (size_t j = 0; j < size; ++j) {
+          EXPECT_EQ(pdata_ref[j], pdata[j]);
+        }
+        break;
+      }
       case PaddleDType::FLOAT32: {
         float *pdata = static_cast<float *>(out.data.data());
         float *pdata_ref = static_cast<float *>(ref_out.data.data());
@@ -133,6 +146,31 @@ std::unordered_map<std::string, int> GetFuseStatis(PaddlePredictor *predictor,
   }
   *num_ops = num;
   return *fusion_status;
+}
+
+template <typename T>
+void GetInput(const std::string &input_name,
+              std::vector<std::vector<T>> *inputs,
+              const std::vector<int64_t> &dims) {
+  int64_t batch_size = dims[0];
+  int64_t size = 1;
+  for (const auto &dim : dims) {
+    size *= dim;
+  }
+  size /= batch_size;
+
+  T *input_ptr = reinterpret_cast<T *>(malloc(sizeof(T) * size));
+  std::ifstream in(input_name, std::ios::in | std::ios::binary);
+  in.read(reinterpret_cast<char *>(input_ptr), size * sizeof(T));
+  in.close();
+  for (int bs = 0; bs < batch_size; ++bs) {
+    std::vector<T> input;
+    for (int sz = 0; sz < size; ++sz) {
+      input.push_back(input_ptr[sz]);
+    }
+    inputs->push_back(std::move(input));
+  }
+  free(input_ptr);
 }
 
 void SetFakeImageInput(std::vector<std::vector<PaddleTensor>> *inputs,
