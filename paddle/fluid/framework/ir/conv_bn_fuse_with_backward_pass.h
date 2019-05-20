@@ -28,7 +28,7 @@ namespace ir {
  */
 class ConvBNFuseWithBackwardPass : public FusePassBase {
  public:
-  virtual ~ConvBNFusePass() {}
+  virtual ~ConvBNFuseWithBackwardPass() {}
 
  protected:
   void ApplyImpl(ir::Graph* graph) const override;

@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include "paddle/fluid/framework/lod_tensor.h"
+#include "paddle/fluid/framework/op_proto_maker.h"
 #include "paddle/fluid/operators/math/cpu_vec.h"
 #include "paddle/fluid/platform/enforce.h"
 
@@ -44,12 +45,10 @@ namespace ir {
   GET_IR_NODE_FROM_SUBGRAPH(bn_saved_mean, bn_saved_mean, pattern_name);     \
   GET_IR_NODE_FROM_SUBGRAPH(bn_saved_variance, bn_saved_variance, pattern_name)
 
-void recompute_bias_and_weights(LoDTensor* conv_weight_tensor,
-                                const LoDTensor& scale_tensor,
-                                const LoDTensor& bn_bias_tensor,
-                                const LoDTensor& mean_tensor,
-                                LoDTensor* variance_tensor,
-                                LoDTensor* eltwise_y_in_tensor, float epsilon) {
+static void recompute_bias_and_weights(
+    LoDTensor* conv_weight_tensor, const LoDTensor& scale_tensor,
+    const LoDTensor& bn_bias_tensor, const LoDTensor& mean_tensor,
+    LoDTensor* variance_tensor, LoDTensor* eltwise_y_in_tensor, float epsilon) {
   using EigenVectorArrayMap =
       Eigen::Map<Eigen::Array<float, Eigen::Dynamic, 1>>;
   using ConstEigenVectorArrayMap =
@@ -85,8 +84,8 @@ void recompute_bias_and_weights(LoDTensor* conv_weight_tensor,
   auto conv_weight_shape_2d = flatten_to_2d(conv_weight_shape, 1);
 
   EigenMatrixArrayMap conv_weight_array_2d(conv_weight_tensor->data<float>(),
-                                           weights_shape_2d[0],
-                                           weights_shape_2d[1]);
+                                           conv_weight_shape_2d[0],
+                                           conv_weight_shape_2d[1]);
 
   conv_weight_array_2d.colwise() *= variance_array;
 }
@@ -138,20 +137,20 @@ void ConvBNFuseWithBackwardPass::ApplyImpl(ir::Graph* graph) const {
 
     if (!(g->Has("__recompute_bias_and_weights__") &&
           !g->Get<bool>("__recompute_bias_and_weights__"))) {
+      // for bn
+      auto* scale_tensor =
+          scope->FindVar(bn_scale->Name())->GetMutable<LoDTensor>();
+      auto* variance_tensor =
+          scope->FindVar(bn_variance->Name())->GetMutable<LoDTensor>();
+      auto* mean_tensor =
+          scope->FindVar(bn_mean->Name())->GetMutable<LoDTensor>();
+      // for conv
+      auto* conv_weight_tensor =
+          scope->FindVar(conv_weight->Name())->GetMutable<LoDTensor>();
       // for elementwise_add bias
       auto* eltwise_y_in_tensor =
           scope->Var(eltwise_y_in_node->Name())->GetMutable<LoDTensor>();
       eltwise_y_in_tensor->Resize(bn_bias_tensor->dims());
-      // for bn
-      auto* scale_tensor =
-          scope->FindVar(bn_scale.Name())->GetMutable<LoDTensor>();
-      auto* variance_tensor =
-          scope->FindVar(bn_variance.Name())->GetMutable<LoDTensor>();
-      auto* mean_tensor =
-          scope->FindVar(bn_mean.Name())->GetMutable<LoDTensor>();
-      // for conv
-      auto* conv_weight_tensor =
-          scope->FindVar(conv_weight->Name())->GetMutable<LoDTensor>();
       float epsilon = boost::get<float>(batch_norm->Op()->GetAttr("epsilon"));
 
       if (platform::is_gpu_place(bn_bias_tensor->place())) {
@@ -168,12 +167,13 @@ void ConvBNFuseWithBackwardPass::ApplyImpl(ir::Graph* graph) const {
         framework::LoDTensor cpu_conv_weight_tensor;
         to_cpu_tensor(*conv_weight_tensor, &cpu_conv_weight_tensor);
         // for elementwise_add bias
-        eltwise_y_in_tensor->mutable_data<float>(platform::GPUPlace());
+        eltwise_y_in_tensor->mutable_data<float>(bn_bias_tensor->place());
         framework::LoDTensor cpu_eltwise_y_in_tensor;
         cpu_eltwise_y_in_tensor.Resize(eltwise_y_in_tensor->dims());
         // Initialize eltwise_y
-        std::fill_n(cpu_eltwise_y_in_tensor.mutable_data<float>(cpu_place),
-                    cpu_eltwise_y_in_tensor->numel(), 0.0f);
+        std::fill_n(
+            cpu_eltwise_y_in_tensor.mutable_data<float>(platform::CPUPlace()),
+            cpu_eltwise_y_in_tensor.numel(), 0.0f);
         recompute_bias_and_weights(&cpu_conv_weight_tensor, cpu_scale_tensor,
                                    cpu_bn_bias_tensor, cpu_mean_tensor,
                                    &cpu_variance_tensor,
@@ -192,7 +192,7 @@ void ConvBNFuseWithBackwardPass::ApplyImpl(ir::Graph* graph) const {
             eltwise_y_in_tensor->numel(), 0.0f);
         recompute_bias_and_weights(
             conv_weight_tensor, *scale_tensor, *bn_bias_tensor, *mean_tensor,
-            variance_tensor, eltwise_y_in_tensor, epsilon)
+            variance_tensor, eltwise_y_in_tensor, epsilon);
       }
     }
     // fuse conv+bn into conv+elementwise_add
@@ -203,6 +203,7 @@ void ConvBNFuseWithBackwardPass::ApplyImpl(ir::Graph* graph) const {
     desc.SetOutput("Out", std::vector<std::string>({bn_out->Name()}));
     desc.SetType("elementwise_add");
     desc.SetAttr("axis", 1);
+    desc.SetAttr("op_role", static_cast<int>(framework::OpRole::kForward));
     auto eltwise_op = g->CreateOpNode(&desc);  // OpDesc will be copied.
 
     GraphSafeRemoveNodes(graph, {bn_scale, bn_bias, bn_mean, bn_variance,
@@ -221,6 +222,5 @@ void ConvBNFuseWithBackwardPass::ApplyImpl(ir::Graph* graph) const {
 }  // namespace framework
 }  // namespace paddle
 
-REGISTER_PASS(conv_bn_fuse_pass, paddle::framework::ir::ConvBNFusePass);
-REGISTER_PASS(conv_eltwiseadd_bn_fuse_pass,
-              paddle::framework::ir::ConvEltwiseAddBNFusePass);
+REGISTER_PASS(conv_bn_fuse_with_backward_pass,
+              paddle::framework::ir::ConvBNFuseWithBackwardPass);
