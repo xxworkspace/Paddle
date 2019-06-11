@@ -58,6 +58,7 @@ void RuntimeProgram::SaveParams(const std::string &dir,
       std::ofstream file(path, std::ios::binary);
       SerializeTensor(file, *exec_scope_, item.name());
       file.close();
+
     }
   }
 }
