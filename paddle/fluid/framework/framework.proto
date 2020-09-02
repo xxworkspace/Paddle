@@ -35,6 +35,8 @@ enum AttrType {
   LONG = 9;
   BLOCKS = 10;
   LONGS = 11;
+  DOUBLE = 12;
+  DOUBLES = 13;
 }
 
 // OpDesc describes an instance of a C++ framework::OperatorBase
@@ -56,6 +58,8 @@ message OpDesc {
     optional int64 l = 13;
     repeated int32 blocks_idx = 14;
     repeated int64 longs = 15;
+    optional double d = 16;
+    repeated double doubles = 17;
   };
 
   message Var {

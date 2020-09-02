@@ -71,6 +71,16 @@ Attribute GetAttrValue(const proto::OpDesc::Attr& attr_desc) {
       }
       return val;
     }
+    case proto::AttrType::DOUBLE: {
+      return attr_desc.d();
+    }
+    case proto::AttrType::DOUBLES: {
+      std::vector<double> val(attr_desc.doubles_size());
+      for (int i = 0; i < attr_desc.doubles_size(); ++i) {
+        val[i] = attr_desc.doubles(i);
+      }
+      return val;
+    }
     default:
       PADDLE_THROW(platform::errors::Unavailable("Unsupport attribute type %d.",
                                                  attr_desc.type()));

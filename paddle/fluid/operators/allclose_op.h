@@ -27,8 +27,8 @@ class AllcloseKernel : public framework::OpKernel<T> {
  public:
   void Compute(const framework::ExecutionContext& ctx) const override {
     // get attrs
-    float rtol = ctx.Attr<float>("rtol");
-    float atol = ctx.Attr<float>("atol");
+    double rtol = ctx.Attr<double>("rtol");
+    double atol = ctx.Attr<double>("atol");
     bool equal_nan = ctx.Attr<bool>("equal_nan");
     // get input/output
     auto* input = ctx.Input<Tensor>("Input");

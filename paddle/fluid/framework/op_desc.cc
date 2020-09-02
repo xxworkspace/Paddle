@@ -678,6 +678,7 @@ struct SetAttrDescVisitor : public boost::static_visitor<void> {
   void operator()(int v) const { attr_->set_i(v); }
   void operator()(float v) const { attr_->set_f(v); }
   void operator()(const std::string &v) const { attr_->set_s(v); }
+  void operator()(double v) const { attr_->set_d(v); }
 
   // Please refer to https://github.com/PaddlePaddle/Paddle/issues/7162
   template <class T,
@@ -704,6 +705,9 @@ struct SetAttrDescVisitor : public boost::static_visitor<void> {
       blocks_idx.push_back(blk->ID());
     }
     VectorToRepeated(blocks_idx, attr_->mutable_blocks_idx());
+  }
+  void operator()(const std::vector<double> &v) const {
+    VectorToRepeated(v, attr_->mutable_doubles());
   }
 
   void operator()(BlockDesc *desc) const { attr_->set_block_idx(desc->ID()); }

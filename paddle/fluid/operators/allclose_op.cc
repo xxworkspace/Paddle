@@ -28,9 +28,9 @@ class AllcloseOpMaker : public framework::OpProtoAndCheckerMaker {
              "The input tensor, it's data type should be float32, float64.");
     AddOutput("Out", "The output tensor, it's data type is bool.");
 
-    AddAttr<float>("rtol", "The relative tolerance. Default: :math:`1e-5` .")
+    AddAttr<double>("rtol", "The relative tolerance. Default: :math:`1e-5` .")
         .SetDefault(1e-5);
-    AddAttr<float>("atol", "The absolute tolerance. Default: :math:`1e-8` .")
+    AddAttr<double>("atol", "The absolute tolerance. Default: :math:`1e-8` .")
         .SetDefault(1e-8);
     AddAttr<bool>("equal_nan",
                   "If :math:`True` , then two :math:`NaNs` will be "
