@@ -17,52 +17,66 @@
 
 namespace piano {
 
+/*
+// 根据ResNet50模型训练所使用的算子进行低层IR指令选择enum class MetaOpCode {
+     
+     Constant,  
+     // 复杂算子  Convolution,  Dot,  BatchNormInference,  BatchNormTraining,  BatchNormGrad,  
+     // 一元算子  Cast,  Log,  Exp,  Rsqrt,  Negative,  Sqrt,  Reverse,  Not,  
+     // 二元算子  Add,  Subtract,  Multiply,  Divide,  Minimum,  Maximum,  Compare,  And,  Or,  Xor,  
+     // 其他元算子  Copy, Broadcast,  Reshape,  Rng,  Slice,  Concatenate,  Transpose,  Reduce,  Select,  Sort,  Tuple,};
+
+*/
+
 template<class InstructionPtr>
 class NoteVisitorBase {
 public:
     NoteVisitorBase(){}
     virtual  ~NoteVisitorBase(){}
 
-    virtual Status Visit(InstructionPtr *) = 0;
+    virtual Status Visit(InstructionPtr) = 0;
     //AI api
-    virtual Status HandleConvolution(InstructionPtr*) = 0;
-    virtual Status HandlePooling(InstructionPtr*) = 0;
-    virtual Status HandlePoolingGrad(InstructionPtr*) = 0;
-    virtual Status HandleDot(InstructionPtr*) = 0;
-    virtual Status HandleBatchNormalzationTraining(InstructionPtr*) = 0;
-    virtual Status HandleBatchNormGrad(InstructionPtr*) = 0;
-    virtual Status HandleBatchNormalzationInference(InstructionPtr*) = 0;
+    virtual Status HandleConvolution(InstructionPtr) = 0;
+    //virtual Status HandlePooling(InstructionPtr) = 0;
+    //virtual Status HandlePoolingGrad(InstructionPtr*) = 0;
+    virtual Status HandleDot(InstructionPtr) = 0;
+    virtual Status HandleBatchNormalzationTraining(InstructionPtr) = 0;
+    virtual Status HandleBatchNormGrad(InstructionPtr) = 0;
+    virtual Status HandleBatchNormalzationInference(InstructionPtr) = 0;
 
     //Unary
-    virtual Status HandleCast(InstructionPtr*) = 0;
-    virtual Status HandleCopy(InstructionPtr*) = 0;
-    virtual Status HandleExp(InstructionPtr*) = 0;
-    virtual Status HandleLog(InstructionPtr*) = 0;
-    virtual Status HandleSqrt(InstructionPtr*) = 0;
-    virtual Status HandleRsqrt(InstructionPtr*) = 0;
-    virtual Status HandleNegative(InstructionPtr*) = 0;
+    virtual Status HandleCast(InstructionPtr) = 0;
+    virtual Status HandleExp(InstructionPtr) = 0;
+    virtual Status HandleLog(InstructionPtr) = 0;
+    virtual Status HandleNegative(InstructionPtr) = 0;
+    virtual Status HandleNot(InstructionPtr) = 0;
+    virtual Status HandleReverse(InstructionPtr) = 0;
+    virtual Status HandleRsqrt(InstructionPtr) = 0;
+    virtual Status HandleSqrt(InstructionPtr) = 0;
 
     //Binary
-    virtual Status HandleAdd(InstructionPtr*) = 0;
-    virtual Status HandleSubtract(InstructionPtr*) = 0;
-    virtual Status HandleMultiply(InstructionPtr*) = 0;
-    virtual Status HandleDivide(InstructionPtr*) = 0;
-    virtual Status HandleMaximum(InstructionPtr*) = 0;
-    virtual Status HandleMiniMum(InstructionPtr*) = 0;
-    virtual Status HandleCompare(InstructionPtr*) = 0;
+    virtual Status HandleAdd(InstructionPtr) = 0;
+    virtual Status HandleSubtract(InstructionPtr) = 0;
+    virtual Status HandleMultiply(InstructionPtr) = 0;
+    virtual Status HandleDivide(InstructionPtr) = 0;
+    virtual Status HandleMaximum(InstructionPtr) = 0;
+    virtual Status HandleMiniMum(InstructionPtr) = 0;
+    virtual Status HandleCompare(InstructionPtr) = 0;
+    virtual Status HandleAnd(InstructionPtr) = 0;
+    virtual Status HandleOr(InstructionPtr) = 0;
+    virtual Status HandleXor(InstructionPtr) = 0;
 
     //other
-    /*
-    virtual Status HandleBroadcast(InstructionPtr* mlo) = 0;
-    virtual Status HandleReduce(InstructionPtr* mlo) = 0;
-    virtual Status HandleReshape(InstructionPtr* mlo) = 0;
-    virtual Status HandleRng(InstructionPtr* mlo) = 0;
-    virtual Status HandleSelect(InstructionPtr* mlo) = 0;
-    virtual Status HandleTranspose(InstructionPtr* mlo) = 0;
-
-    virtual Status HandleConcat(InstructionPtr* mlo) = 0;
-    virtual Status HandleSlice(InstructionPtr* mlo) = 0;
-    */
+    virtual Status HandleBroadcast(InstructionPtr) = 0;
+    virtual Status HandleConcatenate(InstructionPtr) = 0;
+    virtual Status HandleCopy(InstructionPtr) = 0;
+    virtual Status HandleReduce(InstructionPtr) = 0;
+    virtual Status HandleReshape(InstructionPtr) = 0;
+    virtual Status HandleRng(InstructionPtr) = 0;
+    virtual Status HandleSelect(InstructionPtr) = 0;
+    virtual Status HandleSlice(InstructionPtr) = 0;
+    virtual Status HandleTranspose(InstructionPtr) = 0;
+    virtual Status HandleTuple(InstructionPtr) = 0;
 };
 
 }

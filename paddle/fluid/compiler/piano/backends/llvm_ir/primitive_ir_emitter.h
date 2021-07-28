@@ -27,48 +27,51 @@ public:
 
     Status Visit(const NoteInstruction*) override;
 
-    virtual Status HandleElementwiseUnary(const NoteInstruction* mlo) = 0;
-    virtual Status HandleElementwiseBinary(const NoteInstruction* mlo) = 0;
+    virtual Status HandleElementwiseUnary(const NoteInstruction*) = 0;
+    virtual Status HandleElementwiseBinary(const NoteInstruction*) = 0;
 
     //AI api
     Status HandleConvolution(const NoteInstruction*) override {};
-    Status HandlePooling(const NoteInstruction*) override {};
-    Status HandlePoolingGrad(const NoteInstruction*) override {};
+    //virtual Status HandlePooling(InstructionPtr*) = 0;
+    //virtual Status HandlePoolingGrad(InstructionPtr*) = 0;
     Status HandleDot(const NoteInstruction*) override {};
     Status HandleBatchNormalzationTraining(const NoteInstruction*) override {};
     Status HandleBatchNormGrad(const NoteInstruction*) override {};
     Status HandleBatchNormalzationInference(const NoteInstruction*) override {};
 
     //Unary
-    Status HandleCast(const NoteInstruction*);
-    Status HandleCopy(const NoteInstruction*);
-    Status HandleExp(const NoteInstruction*);
-    Status HandleLog(const NoteInstruction*);
-    Status HandleSqrt(const NoteInstruction*);
-    Status HandleRsqrt(const NoteInstruction*);
-    Status HandleNegative(const NoteInstruction*);
-
+    virtual Status HandleCast(const NoteInstruction*);
+    virtual Status HandleExp(const NoteInstruction*);
+    virtual Status HandleLog(const NoteInstruction*);
+    virtual Status HandleNegative(const NoteInstruction*);
+    virtual Status HandleNot(const NoteInstruction*);
+    virtual Status HandleReverse(const NoteInstruction*);
+    virtual Status HandleRsqrt(const NoteInstruction*);
+    virtual Status HandleSqrt(const NoteInstruction*);
+ 
     //Binary
-    Status HandleAdd(const NoteInstruction*);
-    Status HandleSubtract(const NoteInstruction*);
-    Status HandleMultiply(const NoteInstruction*);
-    Status HandleDivide(const NoteInstruction*);
-    Status HandleMaximum(const NoteInstruction*);
-    Status HandleMiniMum(const NoteInstruction*);
-    Status HandleCompare(const NoteInstruction*);
+    virtual Status HandleAdd(const NoteInstruction*);
+    virtual Status HandleSubtract(const NoteInstruction*);
+    virtual Status HandleMultiply(const NoteInstruction*);
+    virtual Status HandleDivide(const NoteInstruction*);
+    virtual Status HandleMaximum(const NoteInstruction*);
+    virtual Status HandleMiniMum(const NoteInstruction*);
+    virtual Status HandleCompare(const NoteInstruction*);
+    virtual Status HandleAnd(const NoteInstruction*);
+    virtual Status HandleOr(const NoteInstruction*);
+    virtual Status HandleXor(const NoteInstruction*);
 
     //other
-    /*
-    virtual Status HandleBroadcast(const NoteInstruction*) = 0;
-    virtual Status HandleReduce(const NoteInstruction*) = 0;
-    virtual Status HandleReshape(const NoteInstruction*) = 0;
-    virtual Status HandleRng(const NoteInstruction*) = 0;
-    virtual Status HandleSelect(const NoteInstruction*) = 0;
-    virtual Status HandleTranspose(const NoteInstruction*) = 0;
-
-    virtual Status HandleConcat(const NoteInstruction*) = 0;
-    virtual Status HandleSlice(const NoteInstruction*) = 0;
-    */
+    virtual Status HandleBroadcast(const NoteInstruction*) {};
+    virtual Status HandleConcatenate(const NoteInstruction*) {};
+    virtual Status HandleCopy(const NoteInstruction*) {};
+    virtual Status HandleReduce(const NoteInstruction*) {};
+    virtual Status HandleReshape(const NoteInstruction*) {};
+    virtual Status HandleRng(const NoteInstruction*) {};
+    virtual Status HandleSelect(const NoteInstruction*) {};
+    virtual Status HandleSlice(const NoteInstruction*) {};
+    virtual Status HandleTranspose(const NoteInstruction*) {};
+    virtual Status HandleTuple(const NoteInstruction*) {};
 
     std::vector<PrimitiveBodyGenerator>& GetBodyGenerators();
 protected:

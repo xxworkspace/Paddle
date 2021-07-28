@@ -25,7 +25,7 @@ public:
 
 protected:
     virtual Status Optimize(std::unique_ptr<NoteModule>&) {};
-    Status ConvertToIR(std::unique_ptr<NoteModule>&, std::unique_ptr<llvm::Module>&,  Schedules&) override;
+    Status ConvertToIR(std::unique_ptr<NoteModule>&, std::unique_ptr<llvm::Module>&,  Schedules*) override;
     virtual std::unique_ptr<Executable> Compile(std::unique_ptr<llvm::Module>&, Schedules&) {};
 };
 

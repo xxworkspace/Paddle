@@ -26,19 +26,20 @@ public:
     virtual std::function<llvm::value*(llvm::value*, llvm::IRBuilder<>*)> 
         GetUnaryyOp(const NoteInstruction*);
 
-    Status HandleElementwiseUnary(NoteInstruction*) override;
-    Status HandleElementwiseBinary(NoteInstruction*) override;
+    Status HandleElementwiseUnary(const NoteInstruction*) override;
+    Status HandleElementwiseBinary(const NoteInstruction*) override;
 
     //other
-    Status HandleBroadcast(NoteInstruction*) override;
-    Status HandleReduce(NoteInstruction*) override;
-    Status HandleReshape(NoteInstruction*) override;
-    Status HandleRng(NoteInstruction*) override;
-    Status HandleSelect(NoteInstruction*) override;
-    Status HandleTranspose(NoteInstruction*) override;
-
-    Status HandleConcat(NoteInstruction*) override;
-    Status HandleSlice(NoteInstruction*) override;
+    Status HandleBroadcast(const NoteInstruction*) override;
+    Status HandleConcatenate(const NoteInstruction*) override;
+    Status HandleCopy(const NoteInstruction*) override;
+    Status HandleReduce(const NoteInstruction*) override;
+    Status HandleReshape(const NoteInstruction*) override;
+    Status HandleRng(const NoteInstruction*) override;
+    Status HandleSelect(const NoteInstruction*) override;
+    Status HandleSlice(const NoteInstruction*) override;
+    Status HandleTranspose(const NoteInstruction*) override;
+    Status HandleTuple(const NoteInstruction*) override;
 
     //about the base code block,
     virtual llvm::Value* ThreadIdx(llvm::IRBuilder* ir_builder) = 0;

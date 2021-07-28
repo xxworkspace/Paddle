@@ -13,19 +13,19 @@
 // limitations under the License.
 #pragma once
 
-#include <vector>
-#include <string>
+#include "nvptx_compiler.h"
+#include "nvptx_executable.h"
 
 namespace piano {
+namespace gpu {
 
-class ScheduleWrapper{
-public:
-    virtual ~ScheduleWrapper(){}
-    virtual Status Run(ExecutionContext&) = 0;
-protected:
-    std::string note_name_;
-};
+Status NvptxCompiler::Optimize(std::unique_ptr<NoteModule>& note_module) {
+    return Status();
+}
 
-using Schedules = std::vector<std::unique_ptr<ScheduleWrapper>>;
+std::unique_ptr<Executable> NvptxCompiler::Compile(std::unique_ptr<llvm::Module>& llvm_module, Schedules* schedules) {
+    return NvptxExecutable();
+}
 
+}
 }

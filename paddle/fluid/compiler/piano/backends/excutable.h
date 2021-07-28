@@ -20,11 +20,13 @@ namespace piano {
 class ExecutionStream {
 public:
 
-}
+};
 
 class ExecutionContext {
 public:
 
+protected:
+    ExecutionStream* execution_stream_;
 };
 
 class Executable {

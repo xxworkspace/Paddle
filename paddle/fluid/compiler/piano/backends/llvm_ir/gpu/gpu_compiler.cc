@@ -13,19 +13,20 @@
 // limitations under the License.
 #pragma once
 
-#include <vector>
-#include <string>
+#include "gpu_compiler.h"
 
 namespace piano {
+namespace gpu {
 
-class ScheduleWrapper{
-public:
-    virtual ~ScheduleWrapper(){}
-    virtual Status Run(ExecutionContext&) = 0;
-protected:
-    std::string note_name_;
-};
+std::unique_ptr<Executable> GpuCompiler::Apply(std::unique_ptr<NoteModule>& note_module) {
 
-using Schedules = std::vector<std::unique_ptr<ScheduleWrapper>>;
+}
 
+
+Status GpuCompiler::ConvertToIR(std::unique_ptr<NoteModule>& note_module, std::unique_ptr<llvm::Module>& llvm_module, Schedules* schedules) {
+
+    return Status();
+}
+
+}
 }

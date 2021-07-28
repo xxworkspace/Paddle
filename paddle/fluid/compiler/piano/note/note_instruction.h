@@ -13,13 +13,24 @@
 // limitations under the License.
 #pragma once
 
+#include "paddle/fluid/compiler/piano/backends/note_visitor_base.h"
+#include "paddle/fluid/compiler/piano/backends/status.h"
+
 namespace piano {
 
+enum NoteCode {
+
+};
+
 class NoteInstruction {
-private:
-
 public:
+    Status Accept(NoteVisitorBase<const NoteInstruction*>* visitor) {
+        visitor->visit(this);
+    }
 
+    NoteCode GetNoteCode();
+private:
+    NoteCode note_code_;
 };
 
 }

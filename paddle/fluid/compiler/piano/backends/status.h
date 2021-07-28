@@ -17,13 +17,22 @@
 
 namespace piano {
 
+enum ErrorCode {
+    OK = 0,
+};
+
 class Status {
 public:
-    Status()
+    Status(ErrorCode error_code, std::string msg)
+        :status_(status), msg_(msg){}
     ~Status()
 
     bool OK();
+    ErrorCode Code();
     std::string Msg();
+private:
+    std::string msg_;
+    ErrorCode error_code_;
 }
 
 }

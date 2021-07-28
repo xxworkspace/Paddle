@@ -23,18 +23,19 @@ public:
     Status HandleElementwiseBinary(const NoteInstruction*) override;
 
     //other
-    /*
-    Status HandleBroadcast(const NoteInstruction* mlo);
-    Status HandleReduce(const NoteInstruction* mlo);
-    Status HandleReshape(const NoteInstruction* mlo);
-    Status HandleRng(const NoteInstruction* mlo);
-    Status HandleSelect(const NoteInstruction* mlo);
-    Status HandleTranspose(const NoteInstruction* mlo);
-
-    Status HandleConcat(const NoteInstruction* mlo);
-    Status HandleSlice(const NoteInstruction* mlo);
-    */
+    Status HandleBroadcast(const NoteInstruction*);
+    Status HandleConcatenate(const NoteInstruction*);
+    Status HandleCopy(const NoteInstruction*);
+    Status HandleReduce(const NoteInstruction*);
+    Status HandleReshape(const NoteInstruction*);
+    Status HandleRng(const NoteInstruction*);
+    Status HandleSelect(const NoteInstruction*);
+    Status HandleSlice(const NoteInstruction*);
+    Status HandleTranspose(const NoteInstruction*);
+    Status HandleTuple(const NoteInstruction*);
 };
+
+
 
 }
 }

@@ -17,11 +17,20 @@
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu/gpu_compiler.h"
 
 namespace piano {
+namespace gpu {
 
 class NvptxCompiler : public GpuCompiler{
 protected:
     Status Optimize(std::unique_ptr<NoteModule>&) override;
     std::unique_ptr<Executable> Compile(std::unique_ptr<llvm::Module>&, Schedules*) override;
+
+    Status InitNvptxContext();
+    Status OptimizeLlvmIR(std::unique_ptr<llvm::Module>&);
+    std::string ConverToPtx(std::unique_ptr<llvm::Module>&);
+
+    std::string GetLlvmTarget();
+    std::string GetLlvmDataLayout();
 };
 
+}
 }

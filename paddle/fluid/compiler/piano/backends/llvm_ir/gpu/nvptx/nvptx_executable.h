@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include <cuda.h>
 #include "paddle/fluid/compiler/piano/backends/executable.h"
 
 namespace piano {
@@ -27,7 +28,7 @@ class NvptxExecutable : public Executable {
 public:
 
 private:
-
+    CUmodule cu_module_;
 };
 
 }

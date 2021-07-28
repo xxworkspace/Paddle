@@ -13,19 +13,8 @@
 // limitations under the License.
 #pragma once
 
-#include <vector>
-#include <string>
+#include "llvm_compiler.h"
 
 namespace piano {
-
-class ScheduleWrapper{
-public:
-    virtual ~ScheduleWrapper(){}
-    virtual Status Run(ExecutionContext&) = 0;
-protected:
-    std::string note_name_;
-};
-
-using Schedules = std::vector<std::unique_ptr<ScheduleWrapper>>;
 
 }

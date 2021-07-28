@@ -24,7 +24,9 @@ public:
     ~NvptxPrimitiveIrEmitter(){}
 
     std::function<llvm::value*(llvm::value*, llvm::IRBuilder<>*)> 
-        GetUnaryOp(const MloInstruction* mlo) override;
+        GetUnaryyOp(const NoteInstruction*) override;
+    std::function<llvm::value*(llvm::value*, llvm::value*, llvm::IRBuilder<>*)> 
+        GetBinaryOp(const NoteInstruction*) override;
 
     //about the base code block,
     llvm::Value* ThreadIdx(llvm::IRBuilder* ir_builder) override;

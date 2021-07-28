@@ -21,7 +21,7 @@
 namespace piano {
 
 using IrArray = std::vector<llvm::Value*>;
-using Generator = std::function<IrArray(IrArray, llvm::IRBuilder<>* llvm_builder)>;
+using Generator = std::function<IrArray(IrArray&, llvm::IRBuilder<>* llvm_builder)>;
 
 class PrimitiveBodyGenerator {
 public:
