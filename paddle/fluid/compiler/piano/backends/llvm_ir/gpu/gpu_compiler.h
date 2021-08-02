@@ -20,7 +20,7 @@ namespace piano {
 namespace gpu {
 class GpuCompiler : public LlvmCompiler {
 public:
-    std::unique_ptr<Executable> Apply(std::unique_ptr<NoteModule>&) override;
+    ScheduleMap Apply(std::unique_ptr<NoteModule>&) override;
 
 protected:
     virtual void Optimize(std::unique_ptr<NoteModule>&) {};

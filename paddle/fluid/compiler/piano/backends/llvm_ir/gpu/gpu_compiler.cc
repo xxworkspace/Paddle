@@ -18,7 +18,7 @@
 namespace paddle {
 namespace piano {
 namespace gpu {
-std::unique_ptr<Executable> GpuCompiler::Apply(std::unique_ptr<NoteModule>& note_module) {
+ScheduleMap GpuCompiler::Apply(std::unique_ptr<NoteModule>& note_module) {
     ScheduleMap schedule_map;
     return schedule_map;
 }
