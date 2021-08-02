@@ -18,6 +18,7 @@ namespace paddle {
 namespace piano {
 
 void IrEmitter::Visit(const NoteInstruction* note) {
+/*
 #define SWITCH(note_op_code, note)    \
     case NoteOpCode::k##note_op_code: \
         Handle##note_op_code(note);   \
@@ -61,7 +62,8 @@ void IrEmitter::Visit(const NoteInstruction* note) {
         default:
             break;
     }
-#undef SWITCH 
+#undef SWITCH
+*/
 }
 
 void IrEmitter::HandleCast(const NoteInstruction* note) {

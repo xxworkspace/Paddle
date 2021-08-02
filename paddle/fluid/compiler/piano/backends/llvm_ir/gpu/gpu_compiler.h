@@ -13,7 +13,7 @@
 // limitations under the License.
 #pragma once
 
-#include "paddle/fluid/framework/compiler/piano/backends/llvm_ir/llvm_compiler.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/llvm_compiler.h"
 
 namespace paddle {
 namespace piano {
@@ -24,9 +24,9 @@ public:
     ScheduleMap Apply(std::unique_ptr<NoteModule>&) override;
 
 protected:
-    virtual void Optimize(std::unique_ptr<NoteModule>&) {};
-    void ConvertToIR(std::unique_ptr<NoteModule>&, std::unique_ptr<llvm::Module>&, ScheduleMap&) override;
-    virtual void Compile(std::unique_ptr<llvm::Module>&, ScheduleMap&) {};
+    virtual void Optimize(std::unique_ptr<NoteModule>&) = 0;
+    void ConvertToIR(std::unique_ptr<NoteModule>&, std::unique_ptr<llvm::Module>&,  ScheduleMap&) override;
+    virtual void Compile(std::unique_ptr<llvm::Module>&, ScheduleMap&) = 0;
 };
 
 }

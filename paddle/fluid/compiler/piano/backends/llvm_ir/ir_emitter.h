@@ -15,9 +15,12 @@
 
 #include "llvm/IR/Module.h"
 #include "paddle/fluid/compiler/piano/backends/note_visitor_base.h"
+#include "paddle/fluid/compiler/piano/backends/schedule_wrapper.h"
 
 namespace paddle {
 namespace piano {
+
+class NoteInstruction;
 
 class IrEmitter : public NoteVisitorBase<const NoteInstruction*> {
 public:
@@ -31,13 +34,13 @@ public:
     virtual void HandleElementwiseBinary(const NoteInstruction*) = 0;
 
     //AI api
-    virtual void HandleConvolution(const NoteInstruction*) {};
-    //virtual void HandlePooling(InstructionPtr*) {};
-    //virtual void HandlePoolingGrad(InstructionPtr*) {};
-    virtual void HandleDot(const NoteInstruction*) {};
-    virtual void HandleBatchNormalzationTraining(const NoteInstruction*) {};
-    virtual void HandleBatchNormGrad(const NoteInstruction*) {};
-    virtual void HandleBatchNormalzationInference(const NoteInstruction*) {};
+    virtual void HandleConvolution(const NoteInstruction*) = 0;
+    //virtual void HandlePooling(InstructionPtr*) = 0;
+    //virtual void HandlePoolingGrad(InstructionPtr*) = 0;
+    virtual void HandleDot(const NoteInstruction*) = 0;
+    virtual void HandleBatchNormalzationTraining(const NoteInstruction*) = 0;
+    virtual void HandleBatchNormGrad(const NoteInstruction*) = 0;
+    virtual void HandleBatchNormalzationInference(const NoteInstruction*) = 0;
 
     //Unary
     virtual void HandleCast(const NoteInstruction*);
@@ -62,16 +65,16 @@ public:
     virtual void HandleXor(const NoteInstruction*);
 
     //other
-    virtual void HandleBroadcast(const NoteInstruction*) {};
-    virtual void HandleConcatenate(const NoteInstruction*) {};
-    virtual void HandleCopy(const NoteInstruction*) {};
-    virtual void HandleReduce(const NoteInstruction*) {};
-    virtual void HandleReshape(const NoteInstruction*) {};
-    virtual void HandleRng(const NoteInstruction*) {};
-    virtual void HandleSelect(const NoteInstruction*) {};
-    virtual void HandleSlice(const NoteInstruction*) {};
-    virtual void HandleTranspose(const NoteInstruction*) {};
-    virtual void HandleTuple(const NoteInstruction*) {};
+    virtual void HandleBroadcast(const NoteInstruction*) = 0;
+    virtual void HandleConcatenate(const NoteInstruction*) = 0;
+    virtual void HandleCopy(const NoteInstruction*) = 0;
+    virtual void HandleReduce(const NoteInstruction*) = 0;
+    virtual void HandleReshape(const NoteInstruction*) = 0;
+    virtual void HandleRng(const NoteInstruction*) = 0;
+    virtual void HandleSelect(const NoteInstruction*) = 0;
+    virtual void HandleSlice(const NoteInstruction*) = 0;
+    virtual void HandleTranspose(const NoteInstruction*) = 0;
+    virtual void HandleTuple(const NoteInstruction*) = 0;
 
 protected:
     llvm::Module* llvm_module_;
