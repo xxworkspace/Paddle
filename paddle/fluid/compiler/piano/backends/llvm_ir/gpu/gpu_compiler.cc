@@ -18,6 +18,7 @@
 namespace paddle {
 namespace piano {
 namespace gpu {
+
 ScheduleMap GpuCompiler::Apply(std::unique_ptr<NoteModule>& note_module) {
     ScheduleMap schedule_map;
     return schedule_map;
@@ -25,7 +26,7 @@ ScheduleMap GpuCompiler::Apply(std::unique_ptr<NoteModule>& note_module) {
 
 void GpuCompiler::ConvertToIR(std::unique_ptr<NoteModule>& note_module, 
     std::unique_ptr<llvm::Module>& llvm_module,  ScheduleMap& schedule_map) {
-    
+
 }
 
 }

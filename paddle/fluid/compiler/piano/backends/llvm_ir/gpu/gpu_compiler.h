@@ -18,15 +18,17 @@
 namespace paddle {
 namespace piano {
 namespace gpu {
+
 class GpuCompiler : public LlvmCompiler {
 public:
     ScheduleMap Apply(std::unique_ptr<NoteModule>&) override;
 
 protected:
     virtual void Optimize(std::unique_ptr<NoteModule>&) {};
-    void ConvertToIR(std::unique_ptr<NoteModule>&, std::unique_ptr<llvm::Module>&,  ScheduleMap&) override;
+    void ConvertToIR(std::unique_ptr<NoteModule>&, std::unique_ptr<llvm::Module>&, ScheduleMap&) override;
     virtual void Compile(std::unique_ptr<llvm::Module>&, ScheduleMap&) {};
 };
+
 }
 }
 }
