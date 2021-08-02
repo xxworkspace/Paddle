@@ -14,14 +14,14 @@
 #pragma once
 
 #include "llvm/IR/Module.h"
-#include "paddle/fluid/framework/compiler/piano/backends/compiler.h"
+#include "paddle/fluid/compiler/piano/backends/compiler.h"
 
 namespace paddle {
 namespace piano {
 
 class LlvmCompiler : public Compiler {
 public:
-    virtual ScheduleMap Apply(std::unique_ptr<NoteModule>&) {};
+    virtual ScheduleMap Apply(std::unique_ptr<NoteModule>&) = 0;
 protected:
     virtual void Optimize(std::unique_ptr<NoteModule>&) = 0;
     virtual void ConvertToIR(std::unique_ptr<NoteModule>&, std::unique_ptr<llvm::Module>&,  ScheduleMap&) = 0;
