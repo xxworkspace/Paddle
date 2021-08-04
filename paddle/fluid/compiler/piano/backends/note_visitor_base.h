@@ -41,8 +41,8 @@ class NoteVisitorBase {
   virtual void VisitNot(InstructionPtr) = 0;
   virtual void VisitReshape(InstructionPtr) = 0;
   virtual void VisitReverse(InstructionPtr) = 0;
-  virtual void VisitRsqrt(InstructionPtr) = virtual void VisitSlice(
-      InstructionPtr) = 0;
+  virtual void VisitRSqrt(InstructionPtr) = 0;
+  virtual void VisitSlice(InstructionPtr) = 0;
   virtual void VisitSqrt(InstructionPtr) = 0;
   virtual void VisitTranspose(InstructionPtr) = 0;
 
