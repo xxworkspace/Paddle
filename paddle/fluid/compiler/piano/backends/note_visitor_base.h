@@ -24,7 +24,7 @@ class NoteVisitorBase {
   // Scalar op
   virtual void VisitConstant(InstructionPtr) = 0;
 
-  //
+  // ops can be replaced by library
   virtual void VisitBatchNormGrad(InstructionPtr) = 0;
   virtual void VisitBatchNormInference(InstructionPtr) = 0;
   virtual void VisitBatchNormTraining(InstructionPtr) = 0;
@@ -41,7 +41,7 @@ class NoteVisitorBase {
   virtual void VisitNot(InstructionPtr) = 0;
   virtual void VisitReshape(InstructionPtr) = 0;
   virtual void VisitReverse(InstructionPtr) = 0;
-  virtual void VisitRSqrt(InstructionPtr) = 0;
+  virtual void VisitRsqrt(InstructionPtr) = 0;
   virtual void VisitSlice(InstructionPtr) = 0;
   virtual void VisitSqrt(InstructionPtr) = 0;
   virtual void VisitTranspose(InstructionPtr) = 0;
@@ -52,7 +52,7 @@ class NoteVisitorBase {
   virtual void VisitCompare(InstructionPtr) = 0;
   virtual void VisitDivide(InstructionPtr) = 0;
   virtual void VisitMaximum(InstructionPtr) = 0;
-  virtual void VisitMiniMum(InstructionPtr) = 0;
+  virtual void VisitMinimum(InstructionPtr) = 0;
   virtual void VisitMultiply(InstructionPtr) = 0;
   virtual void VisitOr(InstructionPtr) = 0;
   virtual void VisitSubtract(InstructionPtr) = 0;
