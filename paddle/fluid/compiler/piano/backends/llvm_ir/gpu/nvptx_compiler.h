@@ -13,6 +13,8 @@
 // limitations under the License.
 #pragma once
 
+#include <memory>
+#include "llvm/Support/TargetSelect.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu/gpu_compiler.h"
 
 namespace paddle {
@@ -30,6 +32,7 @@ class NvptxCompiler : public GpuCompiler {
 
   std::string GetLlvmTarget();
   std::string GetLlvmDataLayout();
+  std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
 };
 
 }  // namespace gpu
