@@ -1,0 +1,4 @@
+add_subdirectory(gpu)
+
+cc_library(primitive_ir_emitter SRCS primitive_ir_emitter.cc)
+cc_test(primitive_ir_emitter_test SRCS primitive_ir_emitter_test.cc DEPS primitive_ir_emitter)
