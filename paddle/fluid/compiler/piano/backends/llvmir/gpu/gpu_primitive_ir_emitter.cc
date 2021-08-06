@@ -19,26 +19,26 @@ namespace piano {
 namespace gpu {
 
 void GpuPrimitiveIrEmitter::VisitElementwiseUnary(
-    const note::Instruction* note) {}
+    const note::Instruction* instr) {}
 
 void GpuPrimitiveIrEmitter::VisitElementwiseBinary(
-    const note::Instruction* note) {}
+    const note::Instruction* instr) {}
 
 // Unary
-void GpuPrimitiveIrEmitter::VisitBroadcast(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitCopy(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitReshape(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitReverse(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitSlice(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitTranspose(const note::Instruction* note) {}
+void GpuPrimitiveIrEmitter::VisitBroadcast(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitCopy(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitReshape(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitReverse(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitSlice(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitTranspose(const note::Instruction* instr) {}
 
 // Other
-void GpuPrimitiveIrEmitter::VisitSelect(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitConcatenate(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitReduce(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitRng(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitSort(const note::Instruction* note) {}
-void GpuPrimitiveIrEmitter::VisitTuple(const note::Instruction* note) {}
+void GpuPrimitiveIrEmitter::VisitSelect(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitConcatenate(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitReduce(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitRng(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitSort(const note::Instruction* instr) {}
+void GpuPrimitiveIrEmitter::VisitTuple(const note::Instruction* instr) {}
 
 }  // namespace gpu
 }  // namespace piano

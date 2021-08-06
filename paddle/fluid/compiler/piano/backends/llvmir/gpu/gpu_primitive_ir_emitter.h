@@ -13,7 +13,7 @@
 // limitations under the License.
 #pragma once
 
-#include <llvm/IR/IRBuilder.h>
+#include "llvm/IR/IRBuilder.h"
 #include "paddle/fluid/compiler/piano/backends/llvmir/primitive_ir_emitter.h"
 
 namespace paddle {
