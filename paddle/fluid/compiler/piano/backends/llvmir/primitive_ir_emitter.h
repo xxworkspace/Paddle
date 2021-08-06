@@ -21,62 +21,64 @@
 namespace paddle {
 namespace piano {
 
+namespace note {
 class Instruction;
+}
 
-class PrimitiveIrEmitter : public NoteVisitorBase<const Instruction*> {
+class PrimitiveIrEmitter : public NoteVisitorBase<const note::Instruction*> {
  public:
   PrimitiveIrEmitter() {}
   virtual ~PrimitiveIrEmitter() {}
 
-  virtual void VisitElementwiseUnary(const Instruction*) = 0;
-  virtual void VisitElementwiseBinary(const Instruction*) = 0;
+  virtual void VisitElementwiseUnary(const note::Instruction*) = 0;
+  virtual void VisitElementwiseBinary(const note::Instruction*) = 0;
 
   // Scalar op
-  virtual void VisitConstant(const Instruction*) = 0;
+  virtual void VisitConstant(const note::Instruction*) = 0;
 
   // ops can be replaced by library
-  void VisitBatchNormGrad(const Instruction*) override{};
-  void VisitBatchNormInference(const Instruction*) override{};
-  void VisitBatchNormTraining(const Instruction*) override{};
-  void VisitConvolution(const Instruction*) override{};
-  void VisitDot(const Instruction*) override{};
+  void VisitBatchNormGrad(const note::Instruction*) override{};
+  void VisitBatchNormInference(const note::Instruction*) override{};
+  void VisitBatchNormTraining(const note::Instruction*) override{};
+  void VisitConvolution(const note::Instruction*) override{};
+  void VisitDot(const note::Instruction*) override{};
 
   // Unary
-  virtual void VisitBroadcast(const Instruction*) = 0;
-  virtual void VisitCopy(const Instruction*) = 0;
-  virtual void VisitReshape(const Instruction*) = 0;
-  virtual void VisitReverse(const Instruction*) = 0;
-  virtual void VisitSlice(const Instruction*) = 0;
-  virtual void VisitTranspose(const Instruction*) = 0;
+  virtual void VisitBroadcast(const note::Instruction*) = 0;
+  virtual void VisitCopy(const note::Instruction*) = 0;
+  virtual void VisitReshape(const note::Instruction*) = 0;
+  virtual void VisitReverse(const note::Instruction*) = 0;
+  virtual void VisitSlice(const note::Instruction*) = 0;
+  virtual void VisitTranspose(const note::Instruction*) = 0;
 
   // Unary Compute
-  void VisitCast(const Instruction*) override;
-  void VisitExp(const Instruction*) override;
-  void VisitLog(const Instruction*) override;
-  void VisitNegative(const Instruction*) override;
-  void VisitNot(const Instruction*) override;
-  void VisitRsqrt(const Instruction*) override;
-  void VisitSqrt(const Instruction*) override;
+  void VisitCast(const note::Instruction*) override;
+  void VisitExp(const note::Instruction*) override;
+  void VisitLog(const note::Instruction*) override;
+  void VisitNegative(const note::Instruction*) override;
+  void VisitNot(const note::Instruction*) override;
+  void VisitRsqrt(const note::Instruction*) override;
+  void VisitSqrt(const note::Instruction*) override;
 
   // Binary
-  void VisitAdd(const Instruction*) override;
-  void VisitAnd(const Instruction*) override;
-  void VisitCompare(const Instruction*) override;
-  void VisitDivide(const Instruction*) override;
-  void VisitMaximum(const Instruction*) override;
-  void VisitMinimum(const Instruction*) override;
-  void VisitMultiply(const Instruction*) override;
-  void VisitOr(const Instruction*) override;
-  void VisitSubtract(const Instruction*) override;
-  void VisitXor(const Instruction*) override;
+  void VisitAdd(const note::Instruction*) override;
+  void VisitAnd(const note::Instruction*) override;
+  void VisitCompare(const note::Instruction*) override;
+  void VisitDivide(const note::Instruction*) override;
+  void VisitMaximum(const note::Instruction*) override;
+  void VisitMinimum(const note::Instruction*) override;
+  void VisitMultiply(const note::Instruction*) override;
+  void VisitOr(const note::Instruction*) override;
+  void VisitSubtract(const note::Instruction*) override;
+  void VisitXor(const note::Instruction*) override;
 
   // other
-  virtual void VisitSelect(const Instruction*) = 0;
-  virtual void VisitConcatenate(const Instruction*) = 0;
-  virtual void VisitReduce(const Instruction*) = 0;
-  virtual void VisitRng(const Instruction*) = 0;
-  virtual void VisitSort(const Instruction*) = 0;
-  virtual void VisitTuple(const Instruction*) = 0;
+  virtual void VisitSelect(const note::Instruction*) = 0;
+  virtual void VisitConcatenate(const note::Instruction*) = 0;
+  virtual void VisitReduce(const note::Instruction*) = 0;
+  virtual void VisitRng(const note::Instruction*) = 0;
+  virtual void VisitSort(const note::Instruction*) = 0;
+  virtual void VisitTuple(const note::Instruction*) = 0;
 
   std::vector<PrimitiveIrGenerator> GetPrimitiveIrGenerators();
 
