@@ -25,9 +25,9 @@ class NvptxPrimitiveIrEmitter : public GpuPrimitiveIrEmitter {
   ~NvptxPrimitiveIrEmitter();
 
   std::function<llvm::Value*(llvm::Value*, llvm::IRBuilder<>*)> GetUnaryOp(
-      const NoteInstruction*) override;
+      const Instruction*) override;
   std::function<llvm::Value*(llvm::Value*, llvm::Value*, llvm::IRBuilder<>*)>
-  GetBinaryOp(const NoteInstruction*) override;
+  GetBinaryOp(const Instruction*) override;
 
   // block size
   llvm::Value* ThreadIdx(llvm::IRBuilder<>*) override;

@@ -24,28 +24,28 @@ class GpuPrimitiveIrEmitter : public PrimitiveIrEmitter {
  public:
   virtual std::function<llvm::Value*(llvm::Value*, llvm::Value*,
                                      llvm::IRBuilder<>*)>
-  GetBinaryOp(const NoteInstruction*) = 0;
+  GetBinaryOp(const Instruction*) = 0;
   virtual std::function<llvm::Value*(llvm::Value*, llvm::IRBuilder<>*)>
-  GetUnaryOp(const NoteInstruction*) = 0;
+  GetUnaryOp(const Instruction*) = 0;
 
-  void VisitElementwiseUnary(const NoteInstruction*) override;
-  void VisitElementwiseBinary(const NoteInstruction*) override;
+  void VisitElementwiseUnary(const Instruction*) override;
+  void VisitElementwiseBinary(const Instruction*) override;
 
   // Unary
-  void VisitBroadcast(const NoteInstruction*) override;
-  void VisitCopy(const NoteInstruction*) override;
-  void VisitReshape(const NoteInstruction*) override;
-  void VisitReverse(const NoteInstruction*) override;
-  void VisitSlice(const NoteInstruction*) override;
-  void VisitTranspose(const NoteInstruction*) override;
+  void VisitBroadcast(const Instruction*) override;
+  void VisitCopy(const Instruction*) override;
+  void VisitReshape(const Instruction*) override;
+  void VisitReverse(const Instruction*) override;
+  void VisitSlice(const Instruction*) override;
+  void VisitTranspose(const Instruction*) override;
 
   // other
-  void VisitSelect(const NoteInstruction*) override;
-  void VisitConcatenate(const NoteInstruction*) override;
-  void VisitReduce(const NoteInstruction*) override;
-  void VisitRng(const NoteInstruction*) override;
-  void VisitSort(const NoteInstruction*) override;
-  void VisitTuple(const NoteInstruction*) override;
+  void VisitSelect(const Instruction*) override;
+  void VisitConcatenate(const Instruction*) override;
+  void VisitReduce(const Instruction*) override;
+  void VisitRng(const Instruction*) override;
+  void VisitSort(const Instruction*) override;
+  void VisitTuple(const Instruction*) override;
 
   // about the base code block,
   virtual llvm::Value* ThreadIdx(llvm::IRBuilder<>*) = 0;

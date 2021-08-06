@@ -17,71 +17,71 @@
 namespace paddle {
 namespace piano {
 
-void PrimitiveIrEmitter::VisitCast(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitCast(const Instruction* note) {
   VisitElementwiseUnary(note);
 }
 
-void PrimitiveIrEmitter::VisitExp(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitExp(const Instruction* note) {
   VisitElementwiseUnary(note);
 }
 
-void PrimitiveIrEmitter::VisitLog(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitLog(const Instruction* note) {
   VisitElementwiseUnary(note);
 }
 
-void PrimitiveIrEmitter::VisitNegative(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitNegative(const Instruction* note) {
   VisitElementwiseUnary(note);
 }
 
-void PrimitiveIrEmitter::VisitNot(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitNot(const Instruction* note) {
   VisitElementwiseUnary(note);
 }
 
-void PrimitiveIrEmitter::VisitRsqrt(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitRsqrt(const Instruction* note) {
   VisitElementwiseUnary(note);
 }
 
-void PrimitiveIrEmitter::VisitSqrt(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitSqrt(const Instruction* note) {
   VisitElementwiseUnary(note);
 }
 
-void PrimitiveIrEmitter::VisitAdd(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitAdd(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitAnd(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitAnd(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitCompare(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitCompare(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitDivide(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitDivide(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitMaximum(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitMaximum(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitMinimum(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitMinimum(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitMultiply(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitMultiply(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitOr(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitOr(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitSubtract(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitSubtract(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 
-void PrimitiveIrEmitter::VisitXor(const NoteInstruction* note) {
+void PrimitiveIrEmitter::VisitXor(const Instruction* note) {
   VisitElementwiseBinary(note);
 }
 

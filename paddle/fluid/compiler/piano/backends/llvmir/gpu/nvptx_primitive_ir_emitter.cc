@@ -19,14 +19,14 @@ namespace piano {
 namespace gpu {
 
 std::function<llvm::Value*(llvm::Value*, llvm::IRBuilder<>*)>
-NvptxPrimitiveIrEmitter::GetUnaryOp(const NoteInstruction* note) {
+NvptxPrimitiveIrEmitter::GetUnaryOp(const Instruction* note) {
   return
       [note](llvm::Value* Value,
              llvm::IRBuilder<>* ir_builder) -> llvm::Value* { return nullptr; };
 }
 
 std::function<llvm::Value*(llvm::Value*, llvm::Value*, llvm::IRBuilder<>*)>
-NvptxPrimitiveIrEmitter::GetBinaryOp(const NoteInstruction* note) {
+NvptxPrimitiveIrEmitter::GetBinaryOp(const Instruction* note) {
   return
       [note](llvm::Value* first, llvm::Value* dst,
              llvm::IRBuilder<>* ir_builder) -> llvm::Value* { return nullptr; };
