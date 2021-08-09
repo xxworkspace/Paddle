@@ -1,5 +1,0 @@
-cc_library(gpu_primitive_ir_emitter SRCS gpu_primitive_ir_emitter.cc)
-cc_test(gpu_primitive_ir_emitter_test SRCS gpu_primitive_ir_emitter_test.cc DEPS gpu_primitive_ir_emitter)
-
-cc_library(nvptx_primitive_ir_emitter SRCS nvptx_primitive_ir_emitter.cc)
-cc_test(nvptx_primitive_ir_emitter_test SRCS nvptx_primitive_ir_emitter_test.cc DEPS nvptx_primitive_ir_emitter)

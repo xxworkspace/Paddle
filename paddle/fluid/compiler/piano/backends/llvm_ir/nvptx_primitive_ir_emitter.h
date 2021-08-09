@@ -13,11 +13,11 @@
 // limitations under the License.
 #pragma once
 
-#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu/gpu_primitive_ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_primitive_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
-namespace gpu {
+namespace backends {
 
 class NvptxPrimitiveIrEmitter : public GpuPrimitiveIrEmitter {
  public:
@@ -43,6 +43,6 @@ class NvptxPrimitiveIrEmitter : public GpuPrimitiveIrEmitter {
   llvm::Value* Alloca(llvm::IRBuilder<>*, unsigned) override;
 };
 
-}  // namespace gpu
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle

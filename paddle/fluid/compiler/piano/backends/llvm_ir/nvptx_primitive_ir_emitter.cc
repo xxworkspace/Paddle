@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu/nvptx_primitive_ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_primitive_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
-namespace gpu {
+namespace backends {
 
 std::function<llvm::Value*(llvm::Value*, llvm::IRBuilder<>*)>
 NvptxPrimitiveIrEmitter::GetUnaryOp(const note::Instruction* instr) {
@@ -77,6 +77,6 @@ llvm::Value* NvptxPrimitiveIrEmitter::Alloca(llvm::IRBuilder<>* ir_builder,
   return nullptr;
 }
 
-}  // namespace gpu
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle

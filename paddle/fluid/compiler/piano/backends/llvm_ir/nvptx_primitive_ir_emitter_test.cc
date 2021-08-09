@@ -12,22 +12,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu/gpu_primitive_ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_primitive_ir_emitter.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
 namespace paddle {
 namespace piano {
-namespace gpu {
+namespace backends {
 
-TEST(GpuPrimitiveIrEmitter, ElementwiseUnary) {}
+TEST(NvptxPrimitiveIrEmitter, UnaryOp) {}
 
-TEST(GpuPrimitiveIrEmitter, ElementwiseBinary) {}
+TEST(NvptxPrimitiveIrEmitter, BinaryOp) {}
 
-TEST(GpuPrimitiveIrEmitter, UnaryOp) {}
+TEST(NvptxPrimitiveIrEmitter, BaseOp) {}
 
-TEST(GpuPrimitiveIrEmitter, OtherOp) {}
-
-}  // namespace gpu
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle

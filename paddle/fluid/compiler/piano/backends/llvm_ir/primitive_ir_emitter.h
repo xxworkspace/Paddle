@@ -20,12 +20,9 @@
 
 namespace paddle {
 namespace piano {
+namespace backends {
 
-namespace note {
-class Instruction;
-}
-
-class PrimitiveIrEmitter : public NoteVisitorBase<const note::Instruction*> {
+class PrimitiveIrEmitter : public NoteVisitorBase {
  public:
   PrimitiveIrEmitter() {}
   virtual ~PrimitiveIrEmitter() {}
@@ -86,5 +83,6 @@ class PrimitiveIrEmitter : public NoteVisitorBase<const note::Instruction*> {
   std::vector<PrimitiveIrGenerator> primitive_ir_generators_;
 };
 
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle

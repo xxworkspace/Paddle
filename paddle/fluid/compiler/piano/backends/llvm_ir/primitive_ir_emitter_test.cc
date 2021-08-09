@@ -18,10 +18,12 @@ limitations under the License. */
 
 namespace paddle {
 namespace piano {
+namespace backends {
 
 TEST(PrimitiveIrEmitter, VisitUnary) {}
 
 TEST(PrimitiveIrEmitter, VisitBinary) {}
 
+}  // namedspace backends
 }  // namespace piano
 }  // namespace paddle

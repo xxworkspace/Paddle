@@ -16,6 +16,7 @@
 
 namespace paddle {
 namespace piano {
+namespace backends {
 
 void PrimitiveIrEmitter::VisitCast(const note::Instruction* instr) {
   VisitElementwiseUnary(instr);
@@ -90,5 +91,6 @@ PrimitiveIrEmitter::GetPrimitiveIrGenerators() {
   return primitive_ir_generators_;
 }
 
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle

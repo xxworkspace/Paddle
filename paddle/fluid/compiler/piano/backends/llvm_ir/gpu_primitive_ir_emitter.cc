@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu/gpu_primitive_ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_primitive_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
-namespace gpu {
+namespace backends {
 
 void GpuPrimitiveIrEmitter::VisitElementwiseUnary(
     const note::Instruction* instr) {}
@@ -40,6 +40,6 @@ void GpuPrimitiveIrEmitter::VisitRng(const note::Instruction* instr) {}
 void GpuPrimitiveIrEmitter::VisitSort(const note::Instruction* instr) {}
 void GpuPrimitiveIrEmitter::VisitTuple(const note::Instruction* instr) {}
 
-}  // namespace gpu
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle

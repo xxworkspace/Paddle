@@ -18,7 +18,7 @@
 
 namespace paddle {
 namespace piano {
-namespace gpu {
+namespace backends {
 
 class GpuPrimitiveIrEmitter : public PrimitiveIrEmitter {
  public:
@@ -61,6 +61,6 @@ class GpuPrimitiveIrEmitter : public PrimitiveIrEmitter {
   virtual llvm::Value* Alloca(llvm::IRBuilder<>*, unsigned) = 0;
 };
 
-}  // namespace gpu
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle

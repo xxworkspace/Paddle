@@ -20,6 +20,7 @@
 
 namespace paddle {
 namespace piano {
+namespace backends {
 
 using IrArray = std::vector<llvm::Value*>;
 using Generator =
@@ -48,5 +49,6 @@ class PrimitiveIrGenerator {
   Generator generator_;
 };
 
+}  // namespace backends
 }  // namespace piano
 }  // namespace paddle
