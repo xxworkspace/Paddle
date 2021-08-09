@@ -20,19 +20,29 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-TEST(PrimitiveIrEmitter, UnaryOp) {}
+TEST(NvptxPrimitiveIrEmitter, GetBinaryOp) {
+  NvptxPrimitiveIrEmitter nvptx_primitive_ir_emitter;
+  auto op = nvptx_primitive_ir_emitter.GetUnaryOp(nullptr);
+}
 
-TEST(PrimitiveIrEmitter, BinaryOp) {}
+TEST(NvptxPrimitiveIrEmitter, GetUnaryOp) {
+  NvptxPrimitiveIrEmitter nvptx_primitive_ir_emitter;
+  auto op = nvptx_primitive_ir_emitter.GetBinaryOp(nullptr);
+}
 
-TEST(GpuPrimitiveIrEmitter, Unary) {}
-
-TEST(GpuPrimitiveIrEmitter, Other) {}
-
-TEST(NvptxPrimitiveIrEmitter, GetBinaryOp) {}
-
-TEST(NvptxPrimitiveIrEmitter, GetUnaryOp) {}
-
-TEST(NvptxPrimitiveIrEmitter, DeviceBaseOp) {}
+TEST(NvptxPrimitiveIrEmitter, DeviceBaseOp) {
+  NvptxPrimitiveIrEmitter nvptx_primitive_ir_emitter;
+  ASSERT_EQ(nvptx_primitive_ir_emitter.ThreadIdx(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.ThreadIdy(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.ThreadIdz(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.BlockDimx(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.BlockDimy(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.BlockDimz(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.BlockIdx(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.BlockIdy(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.BlockIdz(nullptr), nullptr);
+  ASSERT_EQ(nvptx_primitive_ir_emitter.Alloca(nullptr), nullptr);
+}
 
 }  // namespace backends
 }  // namespace piano
