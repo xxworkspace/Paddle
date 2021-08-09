@@ -20,11 +20,19 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-TEST(NvptxPrimitiveIrEmitter, UnaryOp) {}
+TEST(PrimitiveIrEmitter, UnaryOp) {}
 
-TEST(NvptxPrimitiveIrEmitter, BinaryOp) {}
+TEST(PrimitiveIrEmitter, BinaryOp) {}
 
-TEST(NvptxPrimitiveIrEmitter, BaseOp) {}
+TEST(GpuPrimitiveIrEmitter, Unary) {}
+
+TEST(GpuPrimitiveIrEmitter, Other) {}
+
+TEST(NvptxPrimitiveIrEmitter, GetBinaryOp) {}
+
+TEST(NvptxPrimitiveIrEmitter, GetUnaryOp) {}
+
+TEST(NvptxPrimitiveIrEmitter, DeviceBaseOp) {}
 
 }  // namespace backends
 }  // namespace piano
