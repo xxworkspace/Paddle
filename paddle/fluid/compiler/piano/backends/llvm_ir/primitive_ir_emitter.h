@@ -15,7 +15,7 @@
 
 #include <vector>
 #include "llvm/IR/Module.h"
-#include "paddle/fluid/compiler/piano/backends/llvmir/primitive_ir_generator.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/primitive_ir_generator.h"
 #include "paddle/fluid/compiler/piano/backends/note_visitor_base.h"
 
 namespace paddle {

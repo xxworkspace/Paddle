@@ -14,7 +14,7 @@
 #pragma once
 
 #include "llvm/IR/IRBuilder.h"
-#include "paddle/fluid/compiler/piano/backends/llvmir/primitive_ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/primitive_ir_emitter.h"
 
 namespace paddle {
 namespace piano {

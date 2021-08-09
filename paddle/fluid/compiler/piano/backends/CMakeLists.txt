@@ -1,1 +1,1 @@
-add_subdirectory(llvmir)
+add_subdirectory(llvm_ir)

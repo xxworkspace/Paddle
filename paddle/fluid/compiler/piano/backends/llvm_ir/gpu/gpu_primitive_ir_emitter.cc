@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle/fluid/compiler/piano/backends/llvmir/gpu/gpu_primitive_ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu/gpu_primitive_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
