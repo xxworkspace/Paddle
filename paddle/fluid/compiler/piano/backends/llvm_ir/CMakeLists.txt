@@ -2,4 +2,9 @@ cc_library(primitive_ir_emitter SRCS primitive_ir_emitter.cc)
 cc_library(gpu_primitive_ir_emitter SRCS gpu_primitive_ir_emitter.cc)
 cc_library(nvptx_primitive_ir_emitter SRCS nvptx_primitive_ir_emitter.cc)
 
-cc_test(nvptx_primitive_ir_emitter_test SRCS nvptx_primitive_ir_emitter_test.cc DEPS nvptx_primitive_ir_emitter)
+cc_library(ir_emitter SRCS ir_emitter.cc)
+cc_library(gpu_ir_emitter SRCS gpu_ir_emitter.cc)
+cc_library(nvptx_ir_emitter SRCS nvptx_ir_emitter.cc)
+
+cc_test(nvptx_primitive_ir_emitter_test SRCS nvptx_primitive_ir_emitter_test.cc DEPS primitive_ir_emitter gpu_primitive_ir_emitter nvptx_primitive_ir_emitter)
+cc_test(nvptx_ir_emitter_test SRCS nvptx_ir_emitter_test.cc DEPS ir_emitter gpu_ir_emitter nvptx_ir_emitter)
