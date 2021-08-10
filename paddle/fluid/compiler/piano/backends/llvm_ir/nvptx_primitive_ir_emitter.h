@@ -21,9 +21,6 @@ namespace backends {
 
 class NvptxPrimitiveIrEmitter : public GpuPrimitiveIrEmitter {
  public:
-  NvptxPrimitiveIrEmitter();
-  ~NvptxPrimitiveIrEmitter();
-
   std::function<llvm::Value*(llvm::Value*, llvm::IRBuilder<>*)> GetUnaryOp(
       const note::Instruction*) override;
   std::function<llvm::Value*(llvm::Value*, llvm::Value*, llvm::IRBuilder<>*)>

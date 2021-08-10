@@ -22,13 +22,13 @@ namespace backends {
 
 TEST(NvptxIrEmitter, TestOp) {
   // llvm module
-  llvm::LLVMContext llvm_context;
-  llvm::Module llvm_module("", llvm_context);
+  // llvm::LLVMContext llvm_context;
+  // llvm::Module llvm_module("", llvm_context);
   // scheduls
-  Schedules schedules;
+  // Schedules schedules;
 
   // create ir emitter
-  NvptxIrEmitter nvptx_ir_emitter(&llvm_module, &schedules);
+  NvptxIrEmitter nvptx_ir_emitter(nullptr, nullptr);
 
   // Scalar Op
   nvptx_ir_emitter.VisitConstant(nullptr);
