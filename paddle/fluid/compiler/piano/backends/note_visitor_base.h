@@ -15,11 +15,12 @@
 
 namespace paddle {
 namespace piano {
-namespace backends {
 
 namespace note {
 class Instruction;
 }
+
+namespace backends {
 
 class NoteVisitorBase {
  public:
