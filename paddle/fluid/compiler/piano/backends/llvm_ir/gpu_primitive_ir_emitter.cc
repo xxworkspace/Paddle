@@ -27,9 +27,6 @@ void GpuPrimitiveIrEmitter::VisitElementwiseBinary(
 // Scalar op
 void GpuPrimitiveIrEmitter::VisitConstant(const note::Instruction& instr) {}
 
-// Scalar
-void GpuPrimitiveIrEmitter::VisitConstant(const note::Instruction* instr) {}
-
 // Unary
 void GpuPrimitiveIrEmitter::VisitBroadcast(const note::Instruction& instr) {}
 void GpuPrimitiveIrEmitter::VisitCopy(const note::Instruction& instr) {}

@@ -18,27 +18,27 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-void GpuIrEmitter::VisitElementwiseUnary(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction* instr) {}
+void GpuIrEmitter::VisitElementwiseUnary(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {}
 
 // Scalar op
-void GpuIrEmitter::VisitConstant(const note::Instruction* instr) {}
+void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {}
 
 // Unary
-void GpuIrEmitter::VisitBroadcast(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitCopy(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitReshape(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitReverse(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitSlice(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitTranspose(const note::Instruction* instr) {}
+void GpuIrEmitter::VisitBroadcast(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitCopy(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitReshape(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitReverse(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitSlice(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitTranspose(const note::Instruction& instr) {}
 
 // Other
-void GpuIrEmitter::VisitSelect(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitConcatenate(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitReduce(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitRng(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitSort(const note::Instruction* instr) {}
-void GpuIrEmitter::VisitTuple(const note::Instruction* instr) {}
+void GpuIrEmitter::VisitSelect(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitConcatenate(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitReduce(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitRng(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitSort(const note::Instruction& instr) {}
+void GpuIrEmitter::VisitTuple(const note::Instruction& instr) {}
 
 }  // namespace backends
 }  // namespace piano

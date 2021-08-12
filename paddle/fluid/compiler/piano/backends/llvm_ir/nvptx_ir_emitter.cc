@@ -18,11 +18,11 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-void NvptxIrEmitter::VisitBatchNormGrad(const note::Instruction* instr) {}
-void NvptxIrEmitter::VisitBatchNormInference(const note::Instruction* instr) {}
-void NvptxIrEmitter::VisitBatchNormTraining(const note::Instruction* instr) {}
-void NvptxIrEmitter::VisitConvolution(const note::Instruction* instr) {}
-void NvptxIrEmitter::VisitDot(const note::Instruction* instr) {}
+void NvptxIrEmitter::VisitBatchNormGrad(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitBatchNormInference(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitBatchNormTraining(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitConvolution(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitDot(const note::Instruction& instr) {}
 
 }  // namespace backends
 }  // namespace piano

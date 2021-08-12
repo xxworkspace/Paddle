@@ -25,11 +25,11 @@ class NvptxIrEmitter : public GpuIrEmitter {
       : GpuIrEmitter(llvm_module, schedule) {}
   ~NvptxIrEmitter() {}
 
-  void VisitBatchNormGrad(const note::Instruction*) override;
-  void VisitBatchNormInference(const note::Instruction*) override;
-  void VisitBatchNormTraining(const note::Instruction*) override;
-  void VisitConvolution(const note::Instruction*) override;
-  void VisitDot(const note::Instruction*) override;
+  void VisitBatchNormGrad(const note::Instruction&) override;
+  void VisitBatchNormInference(const note::Instruction&) override;
+  void VisitBatchNormTraining(const note::Instruction&) override;
+  void VisitConvolution(const note::Instruction&) override;
+  void VisitDot(const note::Instruction&) override;
 };
 
 }  // namespace backends

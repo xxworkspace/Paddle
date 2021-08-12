@@ -34,9 +34,6 @@ class GpuPrimitiveIrEmitter : public PrimitiveIrEmitter {
   // Scalar op
   void VisitConstant(const note::Instruction&) override;
 
-  // Scalar
-  void VisitConstant(const note::Instruction*) override;
-
   // Unary
   void VisitBroadcast(const note::Instruction&) override;
   void VisitCopy(const note::Instruction&) override;
