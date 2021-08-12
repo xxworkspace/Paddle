@@ -27,7 +27,8 @@ namespace backends {
 
 class IrEmitter : public NoteVisitorBase {
  public:
-  IrEmitter(llvm::Module* llvm_module, Schedules* schedule)
+  IrEmitter() = delete;
+  explicit IrEmitter(llvm::Module* llvm_module, Schedules* schedule)
       : llvm_module_(llvm_module), schedules_(schedule) {}
   virtual ~IrEmitter() {}
 
@@ -82,8 +83,8 @@ class IrEmitter : public NoteVisitorBase {
   virtual void VisitTuple(const note::Instruction&) = 0;
 
  protected:
-  llvm::Module* llvm_module_;
-  Schedules* schedules_;
+  llvm::Module* llvm_module_{nullptr};
+  Schedules* schedules_{nullptr};
 };
 
 }  // namespace backends

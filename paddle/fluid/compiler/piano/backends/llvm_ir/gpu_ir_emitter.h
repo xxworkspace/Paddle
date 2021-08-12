@@ -21,6 +21,7 @@ namespace backends {
 
 class GpuIrEmitter : public IrEmitter {
  public:
+  GpuIrEmitter() = delete;
   explicit GpuIrEmitter(llvm::Module* llvm_module, Schedules* schedule)
       : IrEmitter(llvm_module, schedule) {}
   virtual ~GpuIrEmitter() {}
