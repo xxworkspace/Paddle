@@ -13,10 +13,6 @@
 // limitations under the License.
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-
 #include "llvm/IR/Module.h"
 #include "paddle/fluid/compiler/piano/backends/note_visitor_base.h"
 #include "paddle/fluid/compiler/piano/backends/schedule_wrapper.h"
