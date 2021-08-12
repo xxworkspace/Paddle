@@ -93,7 +93,7 @@ string(CONCAT LLVM_LIBS "-lLLVMWindowsManifest -lLLVMXRay -lLLVMLibDriver "
                         "-lLLVMMCParser -lLLVMMC -lLLVMDebugInfoCodeView -lLLVMDebugInfoMSF "
                         "-lLLVMBitReader -lLLVMCore -lLLVMRemarks -lLLVMBitstreamReader "
                         "-lLLVMBinaryFormat -lLLVMTableGen -lLLVMSupport -lLLVMDemangle "
-                        "-lrt -ldl -lpthread -lm -lz")
+                        "-lrt -ldl -lpthread -lm -lz -ltinfo")
 include_directories(BEFORE SYSTEM ${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
