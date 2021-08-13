@@ -19,21 +19,34 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+Schedules NvptxCompiler::Apply(std::unique_ptr<note::Module>& note_module) {
+  // using pass optimize the note module
+  Optimize(note_module);
+
+  // create llvm module
+  llvm::LLVMContext context;
+  std::unique_ptr<llvm::Module> llvm_module(new llvm::Module("", context));
+
+  // create schedules
+  Schedules schedules;
+
+  // conver operator to llvm ir
+  ConvertToIr(note_module, llvm_module, schedules);
+
+  // compiler llvm ir to lowring ir
+  Compile(llvm_module, schedules);
+
+  return schedules;
+}
+
 void NvptxCompiler::Optimize(std::unique_ptr<note::Module>& note_module) {}
+
+void NvptxCompiler::ConvertToIr(
+    const std::unique_ptr<note::Module>& note_module,
+    std::unique_ptr<llvm::Module>& llvm_module, Schedules& schedule) {}
 
 void NvptxCompiler::Compile(std::unique_ptr<llvm::Module>& llvm_module,
                             Schedules& schedule) {}
-
-void NvptxCompiler::InitNvptxContext() {}
-
-void NvptxCompiler::OptimizeLlvmIR(std::unique_ptr<llvm::Module>& llvm_module) {
-}
-
-std::string NvptxCompiler::ConverToPtx(
-    std::unique_ptr<llvm::Module>& llvm_module) {
-  std::string ptx;
-  return ptx;
-}
 
 }  // namespace backends
 }  // namespace piano

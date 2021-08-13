@@ -11,7 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#pragma once
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/llvm_compiler.h"
 
@@ -19,19 +18,29 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-class GpuCompiler : public LlvmCompiler {
- public:
-  GpuCompiler() = default;
-  virtual ~GpuCompiler() {}
+Schedules LlvmCompiler::Apply(std::unique_ptr<note::Module>& note_module) {
+  // using pass optimize the note module
+  Optimize(note_module);
 
-  Schedules Apply(std::unique_ptr<note::Module>&) override;
+  // create llvm module
+  llvm::LLVMContext context;
+  std::unique_ptr<llvm::Module> llvm_module(new llvm::Module("", context));
 
- protected:
-  virtual void Optimize(std::unique_ptr<note::Module>&) = 0;
-  void ConvertToIr(const std::unique_ptr<note::Module>&,
-                   std::unique_ptr<llvm::Module>&, Schedules&) override;
-  virtual void Compile(std::unique_ptr<llvm::Module>&, Schedules&) = 0;
-};
+  // create schedules
+  Schedules schedules;
+
+  // conver operator to llvm ir
+  ConvertToIr(note_module, llvm_module, schedules);
+
+  // compiler llvm ir to lowring ir
+  Compile(llvm_module, schedules);
+
+  return schedules;
+}
+
+void LlvmCompiler::ConvertToIr(const std::unique_ptr<note::Module>& note_module,
+                               std::unique_ptr<llvm::Module>& llvm_module,
+                               Schedules& schedule) {}
 
 }  // namespace backends
 }  // namespace piano

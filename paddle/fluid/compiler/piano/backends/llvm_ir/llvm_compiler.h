@@ -26,12 +26,12 @@ class LlvmCompiler : public Compiler {
   LlvmCompiler() = default;
   virtual ~LlvmCompiler() {}
 
-  virtual Schedules Apply(std::unique_ptr<note::Module>&) = 0;
+  Schedules Apply(std::unique_ptr<note::Module>&) override;
 
  protected:
   virtual void Optimize(std::unique_ptr<note::Module>&) = 0;
-  virtual void ConvertToIr(const std::unique_ptr<note::Module>&,
-                           std::unique_ptr<llvm::Module>&, Schedules&) = 0;
+  void ConvertToIr(const std::unique_ptr<note::Module>&,
+                   std::unique_ptr<llvm::Module>&, Schedules&);
   virtual void Compile(std::unique_ptr<llvm::Module>&, Schedules&) = 0;
 };
 

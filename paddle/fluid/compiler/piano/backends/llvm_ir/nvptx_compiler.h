@@ -13,13 +13,13 @@
 // limitations under the License.
 #pragma once
 
-#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_compiler.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/llvm_compiler.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
-class NvptxCompiler : public GpuCompiler {
+class NvptxCompiler : public LlvmCompiler {
  public:
   NvptxCompiler() = default;
   ~NvptxCompiler() {}
@@ -27,14 +27,6 @@ class NvptxCompiler : public GpuCompiler {
  protected:
   void Optimize(std::unique_ptr<note::Module>&) override;
   void Compile(std::unique_ptr<llvm::Module>&, Schedules&) override;
-
-  void InitNvptxContext();
-  void OptimizeLlvmIR(std::unique_ptr<llvm::Module>&);
-  std::string ConverToPtx(std::unique_ptr<llvm::Module>&);
-
-  std::string GetLlvmTarget() const { return ""; }
-
-  std::string GetLlvmDataLayout() const { return ""; }
 };
 
 }  // namespace backends
