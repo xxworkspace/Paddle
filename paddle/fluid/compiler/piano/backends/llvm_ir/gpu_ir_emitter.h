@@ -19,6 +19,10 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+// GpuIrEmitter is for translating note::Instruction to llvm IR
+// for GPU.
+// It implement the visit function for note::Instruction's translation。
+
 class GpuIrEmitter : public IrEmitter {
  public:
   GpuIrEmitter() = delete;

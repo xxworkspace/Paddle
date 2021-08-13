@@ -21,6 +21,15 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+// IrEmitter is an Abstract base class for translating note::Instruction to llvm
+// IR.
+// To translating note::Instruction to llvm IR for special device, it should
+// inherit from IrEmitter and overwrite the virtual function.
+// note::Instruction has different type {Scalar Op, Api Op, Unary Op, Binary Op,
+// Others}
+// Elementwise-Unary Op and Elementwise-Binary Op should be implemented
+// in VisitElementwiseUnary and VisitElementwiseBinary.
+
 class IrEmitter : public NoteVisitorBase {
  public:
   IrEmitter() = delete;
@@ -28,7 +37,9 @@ class IrEmitter : public NoteVisitorBase {
       : llvm_module_(llvm_module), schedules_(schedule) {}
   virtual ~IrEmitter() {}
 
+  // ElementwiseUnary Operator
   virtual void VisitElementwiseUnary(const note::Instruction&) = 0;
+  // ElementwiseBinary Operator
   virtual void VisitElementwiseBinary(const note::Instruction&) = 0;
 
   // Scalar op

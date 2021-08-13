@@ -19,6 +19,9 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+// NvptxIrEmitter is used for note::Instruction's implementation with cudnn and
+// cublas.
+
 class NvptxIrEmitter : public GpuIrEmitter {
  public:
   NvptxIrEmitter() = delete;
