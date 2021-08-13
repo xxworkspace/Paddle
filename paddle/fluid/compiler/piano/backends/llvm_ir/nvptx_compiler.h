@@ -21,7 +21,7 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-class NvptxCompiler : public GpuCompiler {
+class NvptxCompiler : public LlvmCompiler {
  public:
   NvptxCompiler() = default;
   ~NvptxCompiler() {}
