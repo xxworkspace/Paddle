@@ -13,6 +13,8 @@
 // limitations under the License.
 #pragma once
 
+#include <mutex>
+#include "llvm/Target/TargetMachine.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_compiler.h"
 
 namespace paddle {
@@ -28,13 +30,17 @@ class NvptxCompiler : public GpuCompiler {
   void Optimize(std::unique_ptr<note::Module>&) override;
   void Compile(std::unique_ptr<llvm::Module>&, Schedules&) override;
 
-  void InitNvptxContext();
+ private:
   void OptimizeLlvmIR(std::unique_ptr<llvm::Module>&);
+  std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
   std::string ConverToPtx(std::unique_ptr<llvm::Module>&);
+  void GetCuFunction(const std::string&, Schedules&);
 
   std::string GetLlvmTarget() const { return ""; }
-
   std::string GetLlvmDataLayout() const { return ""; }
+
+ private:
+  static std::once_flag call_once_flag_;
 };
 
 }  // namespace backends
