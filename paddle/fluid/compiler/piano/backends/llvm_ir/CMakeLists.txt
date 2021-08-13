@@ -7,9 +7,9 @@ cc_test(nvptx_primitive_ir_emitter_test SRCS nvptx_primitive_ir_emitter_test.cc
 target_link_libraries(nvptx_primitive_ir_emitter_test ${LLVM_LIBS})
 
 
-cc_library(gpu_compiler SRCS gpu_compiler.cc DEPS llvm)
+cc_library(llvm_compiler SRCS llvm_compiler.cc DEPS llvm)
 cc_library(nvtpx_compiler SRCS nvptx_compiler.cc DEPS llvm)
 
 cc_test(nvptx_compiler_test SRCS nvptx_compiler_test.cc
-        DEPS nvtpx_compiler gpu_compiler)
+        DEPS nvtpx_compiler llvm_compiler)
 target_link_libraries(nvptx_compiler_test ${LLVM_LIBS})
