@@ -33,6 +33,14 @@ class ScheduleWrapper {
 };
 using Schedules = std::vector<std::unique_ptr<ScheduleWrapper>>;
 
+// Compiler is an abstract class for compilation on a particular platform
+//
+// 'Compiler' ties together note::instruction and codegen (CG) to generate
+// efficient binary code for the target platform.
+//
+// 'XXCompiler' class for a particular device inherit 'Compiler' and
+// overwrite the function 'Apply'
+
 class Compiler {
  public:
   Compiler() = default;

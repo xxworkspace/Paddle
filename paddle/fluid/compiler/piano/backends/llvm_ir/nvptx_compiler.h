@@ -19,6 +19,8 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+// NvptxCompiler compile llvm ir to executable binary code for nvidia gpu.
+
 class NvptxCompiler : public LlvmCompiler {
  public:
   NvptxCompiler() = default;
