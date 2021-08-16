@@ -19,3 +19,4 @@ cc_library(nvtpx_compiler SRCS nvptx_compiler.cc DEPS llvm)
 
 cc_test(nvptx_compiler_test SRCS nvptx_compiler_test.cc
         DEPS nvtpx_compiler llvm_compiler)
+target_link_libraries(nvptx_compiler_test ${LLVM_LIBS})

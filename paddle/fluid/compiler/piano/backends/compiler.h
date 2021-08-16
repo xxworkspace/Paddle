@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "paddle/fluid/compiler/piano/backends/kernel_executor.h"
 
 namespace paddle {
 namespace piano {
@@ -25,13 +26,6 @@ class Module;
 }
 
 namespace backends {
-
-class ScheduleWrapper {
- public:
- protected:
-  std::string kernel_name_;
-};
-using Schedules = std::vector<std::unique_ptr<ScheduleWrapper>>;
 
 // Compiler is an abstract class for compilation on a particular platform
 //
@@ -46,7 +40,7 @@ class Compiler {
   Compiler() = default;
   virtual ~Compiler() {}
 
-  virtual Schedules Apply(std::unique_ptr<note::Module>&) = 0;
+  virtual KernelExecutors Apply(std::unique_ptr<note::Module>&) = 0;
 };
 
 }  // namespace backends

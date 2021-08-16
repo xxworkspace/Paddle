@@ -22,7 +22,7 @@ namespace backends {
 void NvptxCompiler::Optimize(std::unique_ptr<note::Module>& note_module) {}
 
 void NvptxCompiler::Compile(std::unique_ptr<llvm::Module>& llvm_module,
-                            Schedules& schedule) {}
+                            KernelExecutors& kernel_executors_) {}
 
 }  // namespace backends
 }  // namespace piano

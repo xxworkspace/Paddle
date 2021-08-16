@@ -26,8 +26,9 @@ namespace backends {
 class GpuIrEmitter : public IrEmitter {
  public:
   GpuIrEmitter() = delete;
-  explicit GpuIrEmitter(llvm::Module* llvm_module, Schedules* schedule)
-      : IrEmitter(llvm_module, schedule) {}
+  explicit GpuIrEmitter(llvm::Module* llvm_module,
+                        KernelExecutors* kerenl_executors_)
+      : IrEmitter(llvm_module, kerenl_executors_) {}
   virtual ~GpuIrEmitter() {}
 
   void VisitElementwiseUnary(const note::Instruction&) override;

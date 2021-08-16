@@ -31,13 +31,13 @@ class LlvmCompiler : public Compiler {
   LlvmCompiler() = default;
   virtual ~LlvmCompiler() {}
 
-  Schedules Apply(std::unique_ptr<note::Module>&) override;
+  KernelExecutors Apply(std::unique_ptr<note::Module>&) override;
 
  protected:
   virtual void Optimize(std::unique_ptr<note::Module>&) = 0;
   void ConvertToIr(const std::unique_ptr<note::Module>&,
-                   std::unique_ptr<llvm::Module>&, Schedules&);
-  virtual void Compile(std::unique_ptr<llvm::Module>&, Schedules&) = 0;
+                   std::unique_ptr<llvm::Module>&, KernelExecutors&);
+  virtual void Compile(std::unique_ptr<llvm::Module>&, KernelExecutors&) = 0;
 };
 
 }  // namespace backends
