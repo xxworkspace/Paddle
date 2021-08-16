@@ -21,6 +21,8 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+// NvptxCompiler compile llvm ir to executable binary code for nvidia gpu.
+
 class NvptxCompiler : public LlvmCompiler {
  public:
   NvptxCompiler() = default;
@@ -28,13 +30,13 @@ class NvptxCompiler : public LlvmCompiler {
 
  protected:
   void Optimize(std::unique_ptr<note::Module>&) override;
-  void Compile(std::unique_ptr<llvm::Module>&, Schedules&) override;
+  void Compile(std::unique_ptr<llvm::Module>&, KernelExecutors&) override;
 
  private:
   void OptimizeLlvmIR(std::unique_ptr<llvm::Module>&);
   std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
   std::string ConverToPtx(std::unique_ptr<llvm::Module>&);
-  void GetCuFunction(const std::string&, Schedules&);
+  void GetCuFunction(const std::string&, KernelExecutors&);
 
   std::string GetLlvmTarget() const { return ""; }
   std::string GetLlvmDataLayout() const { return ""; }

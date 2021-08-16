@@ -21,18 +21,23 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+// LlvmCompiler is an abstract compiler class that inherit 'Compiler' with
+// llvm ir as low level IR
+// For a particular device compiler with llvm ir should inherit the LlvmCompiler
+// and overwrite the function 'Optimize' and 'Compile'
+
 class LlvmCompiler : public Compiler {
  public:
   LlvmCompiler() = default;
   virtual ~LlvmCompiler() {}
 
-  Schedules Apply(std::unique_ptr<note::Module>&) override;
+  KernelExecutors Apply(std::unique_ptr<note::Module>&) override;
 
  protected:
   virtual void Optimize(std::unique_ptr<note::Module>&) = 0;
   void ConvertToIr(const std::unique_ptr<note::Module>&,
-                   std::unique_ptr<llvm::Module>&, Schedules&);
-  virtual void Compile(std::unique_ptr<llvm::Module>&, Schedules&) = 0;
+                   std::unique_ptr<llvm::Module>&, KernelExecutors&);
+  virtual void Compile(std::unique_ptr<llvm::Module>&, KernelExecutors&) = 0;
 };
 
 }  // namespace backends

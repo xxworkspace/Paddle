@@ -18,7 +18,8 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-Schedules LlvmCompiler::Apply(std::unique_ptr<note::Module>& note_module) {
+KernelExecutors LlvmCompiler::Apply(
+    std::unique_ptr<note::Module>& note_module) {
   // using pass optimize the note module
   Optimize(note_module);
 
@@ -26,21 +27,21 @@ Schedules LlvmCompiler::Apply(std::unique_ptr<note::Module>& note_module) {
   llvm::LLVMContext context;
   std::unique_ptr<llvm::Module> llvm_module(new llvm::Module("", context));
 
-  // create schedules
-  Schedules schedules;
+  // create kernel executor
+  KernelExecutors kernel_executors;
 
   // conver operator to llvm ir
-  ConvertToIr(note_module, llvm_module, schedules);
+  ConvertToIr(note_module, llvm_module, kernel_executors);
 
   // compiler llvm ir to lowring ir
-  Compile(llvm_module, schedules);
+  Compile(llvm_module, kernel_executors);
 
-  return schedules;
+  return kernel_executors;
 }
 
 void LlvmCompiler::ConvertToIr(const std::unique_ptr<note::Module>& note_module,
                                std::unique_ptr<llvm::Module>& llvm_module,
-                               Schedules& schedule) {}
+                               KernelExecutors& kernel_executors) {}
 
 }  // namespace backends
 }  // namespace piano

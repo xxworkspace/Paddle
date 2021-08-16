@@ -13,34 +13,28 @@
 // limitations under the License.
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-#include "paddle/fluid/compiler/piano/backends/kernel_executor.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
-
-namespace note {
-class Module;
-}
-
 namespace backends {
 
-// Compiler is an abstract class for compilation on a particular platform
-//
-// 'Compiler' ties together note::instruction and codegen (CG) to generate
-// efficient binary code for the target platform.
-//
-// 'XXCompiler' class for a particular device inherit 'Compiler' and
-// overwrite the function 'Apply'
+// NvptxIrEmitter is used for note::Instruction's implementation with cudnn and
+// cublas.
 
-class Compiler {
+class NvptxIrEmitter : public GpuIrEmitter {
  public:
-  Compiler() = default;
-  virtual ~Compiler() {}
+  NvptxIrEmitter() = delete;
+  explicit NvptxIrEmitter(llvm::Module* llvm_module,
+                          KernelExecutors* kerenl_executors_)
+      : GpuIrEmitter(llvm_module, kerenl_executors_) {}
+  ~NvptxIrEmitter() {}
 
-  virtual KernelExecutors Apply(std::unique_ptr<note::Module>&) = 0;
+  void VisitBatchNormGrad(const note::Instruction&) override;
+  void VisitBatchNormInference(const note::Instruction&) override;
+  void VisitBatchNormTraining(const note::Instruction&) override;
+  void VisitConvolution(const note::Instruction&) override;
+  void VisitDot(const note::Instruction&) override;
 };
 
 }  // namespace backends

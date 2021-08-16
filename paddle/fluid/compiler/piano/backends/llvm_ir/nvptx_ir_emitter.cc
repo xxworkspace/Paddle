@@ -11,37 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
-#include "paddle/fluid/compiler/piano/backends/kernel_executor.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
-
-namespace note {
-class Module;
-}
-
 namespace backends {
 
-// Compiler is an abstract class for compilation on a particular platform
-//
-// 'Compiler' ties together note::instruction and codegen (CG) to generate
-// efficient binary code for the target platform.
-//
-// 'XXCompiler' class for a particular device inherit 'Compiler' and
-// overwrite the function 'Apply'
-
-class Compiler {
- public:
-  Compiler() = default;
-  virtual ~Compiler() {}
-
-  virtual KernelExecutors Apply(std::unique_ptr<note::Module>&) = 0;
-};
+void NvptxIrEmitter::VisitBatchNormGrad(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitBatchNormInference(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitBatchNormTraining(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitConvolution(const note::Instruction& instr) {}
+void NvptxIrEmitter::VisitDot(const note::Instruction& instr) {}
 
 }  // namespace backends
 }  // namespace piano

@@ -48,13 +48,13 @@ std::string GetComputeCapability() {
 void NvptxCompiler::Optimize(std::unique_ptr<note::Module>& note_module) {}
 
 void NvptxCompiler::Compile(std::unique_ptr<llvm::Module>& llvm_module,
-                            Schedules& schedule) {
+                            KernelExecutors& kernel_executors_) {
   // optimize llvm ir
   OptimizeLlvmIR(llvm_module);
   // convert to ptx
   auto ptx = ConverToPtx(llvm_module);
   // get cu function
-  GetCuFunction(ptx, schedule);
+  GetCuFunction(ptx, kernel_executors_);
 }
 
 void NvptxCompiler::OptimizeLlvmIR(std::unique_ptr<llvm::Module>& llvm_module) {
@@ -118,8 +118,8 @@ std::string NvptxCompiler::ConverToPtx(
   return ptx;
 }
 
-void NvptxCompiler::GetCuFunction(const std::string& ptx, Schedules& schedule) {
-}
+void NvptxCompiler::GetCuFunction(const std::string& ptx,
+                                  KernelExecutors& kernel_executors_) {}
 
 }  // namespace backends
 }  // namespace piano
