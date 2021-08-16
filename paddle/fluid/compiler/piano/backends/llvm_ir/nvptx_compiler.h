@@ -15,7 +15,7 @@
 
 #include <mutex>
 #include "llvm/Target/TargetMachine.h"
-#include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_compiler.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/llvm_compiler.h"
 
 namespace paddle {
 namespace piano {

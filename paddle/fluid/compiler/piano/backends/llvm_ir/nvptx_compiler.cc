@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_compiler.h"
+#include <cuda_runtime.h>
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/CodeGen/CommandFlags.h"
@@ -34,7 +35,13 @@ void InitLlvmNvptxContext() {
   LLVMInitializeNVPTXAsmPrinter();
 }
 
-std::string GetComputeCapability() { return ""; }
+std::string GetComputeCapability() {
+  cudaDeviceProp device_prop;
+  cudaGetDeviceProperties(&device_prop, 0);
+  int major = device_prop.major;
+  int minor = device_prop.minor;
+  return std::to_string(major * 100 + minor);
+}
 
 }  // namespace nvptx
 
