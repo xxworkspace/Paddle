@@ -73,6 +73,28 @@ TEST_F(ShapeTest, ShapeToString) {
   ASSERT_EQ("f32[2, 3]{}", array_string);
 }
 
+TEST_F(ShapeTest, EqualToOther) {
+  Shape s8_d23_no_layout(note::S32, {2, 3});
+  Shape f32_d23_no_layout(note::F32, {2, 3});
+  Shape f32_d45_no_layout(note::F32, {4, 5});
+  Shape f32_d45_with_layout(note::F32, {4, 5});
+  *f32_d45_with_layout.mutable_layout() = Layout({1, 0});
+  Shape f32_d45_layout_reverse(note::F32, {4, 5});
+  *f32_d45_layout_reverse.mutable_layout() = Layout({0, 1});
+
+  Shape::CompareOption default_option;
+  ASSERT_FALSE(s8_d23_no_layout.EqualTo(f32_d23_no_layout, {}));
+  EXPECT_TRUE(s8_d23_no_layout.EqualTo(
+      f32_d23_no_layout, Shape::CompareOption().IgnoreElementType()));
+  ASSERT_FALSE(f32_d23_no_layout.EqualTo(f32_d45_no_layout, {}));
+  EXPECT_TRUE(f32_d23_no_layout.EqualTo(
+      f32_d45_no_layout, Shape::CompareOption().IgnoreDimensions()));
+  ASSERT_FALSE(f32_d45_no_layout.EqualTo(f32_d45_with_layout, {}));
+  EXPECT_TRUE(f32_d45_no_layout.EqualTo(f32_d45_with_layout,
+                                        Shape::CompareOption().IgnoreLayout()));
+  ASSERT_FALSE(f32_d45_with_layout.EqualTo(f32_d45_layout_reverse, {}));
+}
+
 TEST_F(ShapeTest, SignatureTransWithProto) {
   // Signature::ToProto
   auto&& signature_proto = signature_.ToProto();

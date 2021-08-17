@@ -61,6 +61,21 @@ std::string Shape::ToString() const {
       layout().ToString().c_str());
 }
 
+bool Shape::EqualTo(const Shape& other, const CompareOption& option) const {
+  if (!option.ignore_element_type && element_type() != other.element_type()) {
+    return false;
+  }
+
+  if (!option.ignore_dimensions && dimensions() != other.dimensions()) {
+    return false;
+  }
+
+  if (!option.ignore_layout && layout() != other.layout()) {
+    return false;
+  }
+  return true;
+}
+
 Signature::Signature(const note::SignatureProto& proto) {
   std::transform(proto.parameters().begin(), proto.parameters().end(),
                  std::back_inserter(parameters_),
