@@ -13,7 +13,6 @@
 // limitations under the License.
 #pragma once
 
-#include <cuda_runtime.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -32,15 +31,17 @@ enum KernelType {
   JitKernel,
 };
 
-// datatype dev-stream
+// execution context for KernelExecutor
 struct ExecutionContext {};
 
 // KernelExecutor is a kernel executor, it includes kernel information.
+// Each 'KernelType' need define a derived class which inherit 'KernelExecutor'
+// and overwrite the virtual function 'Run'
 class KernelExecutor {
  public:
   KernelExecutor();
   virtual ~KernelExecutor();
-  virtual void run(ExecutionContext&) = 0;
+  virtual void run(std::unique_ptr<ExecutionContext>&) = 0;
 
  public:
   KernelType GetKernelType() const { return kernel_type_; }
