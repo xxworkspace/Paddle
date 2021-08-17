@@ -13,6 +13,7 @@
 // limitations under the License.
 #pragma once
 
+#include <cuda_runtime.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -21,8 +22,7 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-// KernelExecutor is a kernel executor, it includes kernel information.
-
+// kernel type
 enum KernelType {
   BatchNormGradKernel = 0,
   BatchNormInference,
@@ -32,26 +32,23 @@ enum KernelType {
   JitKernel,
 };
 
-template <typename T, typename DevStream>
-struct ExecutionContext {
-  DevStream dev_stream_;
-  std::vector<T*> inputs_;
-  std::vector<T*> outputs_;
-};
+// datatype dev-stream
+struct ExecutionContext {};
 
+// KernelExecutor is a kernel executor, it includes kernel information.
 class KernelExecutor {
  public:
   KernelExecutor();
   virtual ~KernelExecutor();
-
-  template <typename T, typename DevStream>
-  void Run(ExecutionContext<T, DevStream>&) {}
+  virtual void run(ExecutionContext&) = 0;
 
  public:
   KernelType GetKernelType() const { return kernel_type_; }
   std::string GetKernelName() const { return kernel_name_; }
-  std::vector<std::string> GetInputNames() const { return input_names_; }
-  std::vector<std::string> GetOutputNames() const { return output_names_; }
+  const std::vector<std::string>& GetInputNames() const { return input_names_; }
+  const std::vector<std::string>& GetOutputNames() const {
+    return output_names_;
+  }
 
   void SetKernelType(KernelType kernel_type) { kernel_type_ = kernel_type; }
   void SetKernelName(const std::string& kernel_name) {
