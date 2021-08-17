@@ -21,8 +21,7 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-// KernelExecutor is a kernel executor, it includes kernel information.
-
+// kernel type
 enum KernelType {
   BatchNormGradKernel = 0,
   BatchNormInference,
@@ -32,26 +31,25 @@ enum KernelType {
   JitKernel,
 };
 
-template <typename T, typename DevStream>
-struct ExecutionContext {
-  DevStream dev_stream_;
-  std::vector<T*> inputs_;
-  std::vector<T*> outputs_;
-};
+// execution context for KernelExecutor
+struct ExecutionContext {};
 
+// KernelExecutor is a kernel executor, it includes kernel information.
+// Each 'KernelType' need define a derived class which inherit 'KernelExecutor'
+// and overwrite the virtual function 'Run'
 class KernelExecutor {
  public:
   KernelExecutor();
   virtual ~KernelExecutor();
-
-  template <typename T, typename DevStream>
-  void Run(ExecutionContext<T, DevStream>&) {}
+  virtual void run(std::unique_ptr<ExecutionContext>&) = 0;
 
  public:
   KernelType GetKernelType() const { return kernel_type_; }
   std::string GetKernelName() const { return kernel_name_; }
-  std::vector<std::string> GetInputNames() const { return input_names_; }
-  std::vector<std::string> GetOutputNames() const { return output_names_; }
+  const std::vector<std::string>& GetInputNames() const { return input_names_; }
+  const std::vector<std::string>& GetOutputNames() const {
+    return output_names_;
+  }
 
   void SetKernelType(KernelType kernel_type) { kernel_type_ = kernel_type; }
   void SetKernelName(const std::string& kernel_name) {

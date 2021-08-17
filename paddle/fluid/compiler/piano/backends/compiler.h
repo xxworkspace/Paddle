@@ -34,6 +34,9 @@ namespace backends {
 //
 // 'XXCompiler' class for a particular device inherit 'Compiler' and
 // overwrite the function 'Apply'
+//
+// KernelExecutors is a vector of KernelExecutor.
+// By call function 'Run' in KernelExecutor to execute the binary code.
 
 class Compiler {
  public:
