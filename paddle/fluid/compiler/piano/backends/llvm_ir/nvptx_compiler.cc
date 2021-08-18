@@ -45,20 +45,19 @@ std::string GetComputeCapability() {
 
 }  // namespace nvptx
 
-void NvptxCompiler::Optimize(std::unique_ptr<note::Module>& note_module) {}
+void NvptxCompiler::Optimize(note::Module*) {}
 
-void NvptxCompiler::Compile(std::unique_ptr<llvm::Module>& llvm_module,
-                            KernelExecutors& kernel_executors_) {
+void NvptxCompiler::Compile(llvm::Module* llvm_module,
+                            KernelExecutableMap* kernel_executable_map) {
   // optimize llvm ir
   OptimizeLlvmIR(llvm_module);
   // convert to ptx
   auto ptx = ConverToPtx(llvm_module);
   // get cu function
-  GetCuFunction(ptx, kernel_executors_);
+  GetCuFunction(ptx, kernel_executable_map);
 }
 
-void NvptxCompiler::OptimizeLlvmIR(std::unique_ptr<llvm::Module>& llvm_module) {
-}
+void NvptxCompiler::OptimizeLlvmIR(llvm::Module* llvm_module) {}
 
 std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
     llvm::Triple llvm_triple) {
@@ -95,10 +94,10 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
       llvm::codegen::getExplicitCodeModel(), codegen_opt_level));
 }
 
-std::string NvptxCompiler::ConverToPtx(
-    std::unique_ptr<llvm::Module>& llvm_module) {
+std::string NvptxCompiler::ConverToPtx(llvm::Module* llvm_module) {
   // init context
-  std::call_once(NvptxCompiler::call_once_flag_, nvptx::InitLlvmNvptxContext);
+  static std::once_flag call_once_flag_;
+  std::call_once(call_once_flag_, nvptx::InitLlvmNvptxContext);
   // get target machine
   auto target_machine =
       GetTargetMachine(llvm::Triple(llvm_module->getTargetTriple()));
@@ -113,13 +112,13 @@ std::string NvptxCompiler::ConverToPtx(
   target_machine->addPassesToEmitFile(pass_manager, out_stream, nullptr,
                                       llvm::CGFT_AssemblyFile);
   // run pass
-  pass_manager.run(*llvm_module.get());
+  pass_manager.run(*llvm_module);
 
   return ptx;
 }
 
 void NvptxCompiler::GetCuFunction(const std::string& ptx,
-                                  KernelExecutors& kernel_executors_) {}
+                                  KernelExecutableMap* kernel_executable_map) {}
 
 }  // namespace backends
 }  // namespace piano

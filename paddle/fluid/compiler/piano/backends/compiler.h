@@ -16,7 +16,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "paddle/fluid/compiler/piano/backends/kernel_executor.h"
+#include "paddle/fluid/compiler/piano/backends/kernel_executable.h"
 
 namespace paddle {
 namespace piano {
@@ -27,15 +27,15 @@ class Module;
 
 namespace backends {
 
-// Compiler is an abstract class for compilation on a particular platform
+// Compiler is an abstract class for compilation on a particular platform.
 //
 // 'Compiler' ties together note::instruction and codegen (CG) to generate
 // efficient binary code for the target platform.
 //
 // 'XXCompiler' class for a particular device inherit 'Compiler' and
-// overwrite the function 'Apply'
+// overwrite the function 'Apply'.
 //
-// KernelExecutors is a vector of KernelExecutor.
+// KernelExecutableMap is a vector of KernelExecutable.
 // By call function 'Run' in KernelExecutor to execute the binary code.
 
 class Compiler {
@@ -43,7 +43,7 @@ class Compiler {
   Compiler() = default;
   virtual ~Compiler() {}
 
-  virtual KernelExecutors Apply(std::unique_ptr<note::Module>&) = 0;
+  virtual KernelExecutableMap Apply(note::Module*) = 0;
 };
 
 }  // namespace backends

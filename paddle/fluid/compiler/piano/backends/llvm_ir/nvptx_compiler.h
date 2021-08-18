@@ -29,20 +29,17 @@ class NvptxCompiler : public LlvmCompiler {
   ~NvptxCompiler() {}
 
  protected:
-  void Optimize(std::unique_ptr<note::Module>&) override;
-  void Compile(std::unique_ptr<llvm::Module>&, KernelExecutors&) override;
+  void Optimize(note::Module*) override;
+  void Compile(llvm::Module*, KernelExecutableMap*) override;
 
  private:
-  void OptimizeLlvmIR(std::unique_ptr<llvm::Module>&);
+  void OptimizeLlvmIR(llvm::Module*);
   std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
-  std::string ConverToPtx(std::unique_ptr<llvm::Module>&);
-  void GetCuFunction(const std::string&, KernelExecutors&);
+  std::string ConverToPtx(llvm::Module*);
+  void GetCuFunction(const std::string&, KernelExecutableMap*);
 
   std::string GetLlvmTarget() const { return ""; }
   std::string GetLlvmDataLayout() const { return ""; }
-
- private:
-  static std::once_flag call_once_flag_;
 };
 
 }  // namespace backends
