@@ -21,14 +21,14 @@ namespace backends {
 
 // GpuIrEmitter is for translating note::Instruction to llvm IR
 // for GPU.
-// It implement the visit function for note::Instruction's translation。
+// It implement the visit function for note::Instruction's translation.
 
 class GpuIrEmitter : public IrEmitter {
  public:
   GpuIrEmitter() = delete;
   explicit GpuIrEmitter(llvm::Module* llvm_module,
-                        KernelExecutors* kerenl_executors_)
-      : IrEmitter(llvm_module, kerenl_executors_) {}
+                        KernelExecutableMap* kernel_executable_map_)
+      : IrEmitter(llvm_module, kernel_executable_map_) {}
   virtual ~GpuIrEmitter() {}
 
   void VisitElementwiseUnary(const note::Instruction&) override;

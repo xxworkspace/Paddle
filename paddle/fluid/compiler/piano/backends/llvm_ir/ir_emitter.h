@@ -14,7 +14,7 @@
 #pragma once
 
 #include "llvm/IR/Module.h"
-#include "paddle/fluid/compiler/piano/backends/kernel_executor.h"
+#include "paddle/fluid/compiler/piano/backends/kernel_executable.h"
 #include "paddle/fluid/compiler/piano/backends/note_visitor_base.h"
 
 namespace paddle {
@@ -31,19 +31,20 @@ namespace backends {
 // initialize.
 // note::Instruction accept a IrEmitter and choose VisitXXX by note::OpCode
 // Each time VisitXXX will translate one note::Instruction with type OpCode::XXX
-// into a kernel with llvm IR
+// into a kernel with llvm IR.
 
 class IrEmitter : public NoteVisitorBase {
  public:
   IrEmitter() = delete;
   explicit IrEmitter(llvm::Module* llvm_module,
-                     KernelExecutors* kernel_executors)
-      : llvm_module_(llvm_module), kernel_executors_(kernel_executors) {}
+                     KernelExecutableMap* kernel_executable_map)
+      : llvm_module_(llvm_module),
+        kernel_executable_map_(kernel_executable_map) {}
   virtual ~IrEmitter() {}
 
-  // Elementwise-Unary should be implemented in VisitElementwiseUnary
+  // Elementwise-Unary implemented in VisitElementwiseUnary
   virtual void VisitElementwiseUnary(const note::Instruction&) = 0;
-  // Elementwise-Unary should be implemented in VisitElementwiseBinary
+  // Elementwise-Unary implemented in VisitElementwiseBinary
   virtual void VisitElementwiseBinary(const note::Instruction&) = 0;
 
   // Scalar op
@@ -95,7 +96,7 @@ class IrEmitter : public NoteVisitorBase {
 
  protected:
   llvm::Module* llvm_module_{nullptr};
-  KernelExecutors* kernel_executors_{nullptr};
+  KernelExecutableMap* kernel_executable_map_{nullptr};
 };
 
 }  // namespace backends

@@ -18,9 +18,18 @@
 
 namespace paddle {
 namespace piano {
+
+namespace note {
+class Module {};
+}  // namespace note
+
 namespace backends {
 
-TEST(NvptxCompiler, DeviceBaseOp) { NvptxCompiler nvtpx_compiler; }
+TEST(NvptxCompiler, Apply) {
+  NvptxCompiler nvptx_compiler;
+  note::Module note_module;
+  auto kernel_executable_map = nvptx_compiler.Apply(&note_module);
+}
 
 }  // namespace backends
 }  // namespace piano

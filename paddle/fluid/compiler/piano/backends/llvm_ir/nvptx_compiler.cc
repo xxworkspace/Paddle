@@ -19,10 +19,9 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-void NvptxCompiler::Optimize(std::unique_ptr<note::Module>& note_module) {}
-
-void NvptxCompiler::Compile(std::unique_ptr<llvm::Module>& llvm_module,
-                            KernelExecutors& kernel_executors_) {}
+void NvptxCompiler::Optimize(note::Module* note_module) {}
+void NvptxCompiler::Compile(llvm::Module* llvm_module,
+                            KernelExecutableMap* kernel_executable_map) {}
 
 }  // namespace backends
 }  // namespace piano

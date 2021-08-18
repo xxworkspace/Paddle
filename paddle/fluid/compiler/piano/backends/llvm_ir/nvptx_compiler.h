@@ -27,8 +27,8 @@ class NvptxCompiler : public LlvmCompiler {
   ~NvptxCompiler() {}
 
  protected:
-  void Optimize(std::unique_ptr<note::Module>&) override;
-  void Compile(std::unique_ptr<llvm::Module>&, KernelExecutors&) override;
+  void Optimize(note::Module*) override;
+  void Compile(llvm::Module*, KernelExecutableMap*) override;
 };
 
 }  // namespace backends

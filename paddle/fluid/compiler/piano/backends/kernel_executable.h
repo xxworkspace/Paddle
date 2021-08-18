@@ -15,14 +15,15 @@
 
 #include <memory>
 #include <string>
-#include <vector>
+#include <unordered_map>
+#include "paddle/fluid/compiler/piano/note/instruction.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
-// kernel type
-enum KernelType {
+// kernel type.
+enum class KernelType {
   BatchNormGradKernel = 0,
   BatchNormInference,
   BatchNormTrainingKernel,
@@ -31,19 +32,22 @@ enum KernelType {
   JitKernel,
 };
 
-// execution context for KernelExecutor
-struct ExecutionContext {};
+// executable context for KernelExecutable.
+struct ExecutableContext {};
 
-// KernelExecutor is a kernel executor, it includes kernel information.
-// Each 'KernelType' need define a derived class which inherit 'KernelExecutor'
-// and overwrite the virtual function 'Run'
-class KernelExecutor {
+// KernelExecutable is a kernel execution class, it includes kernel information.
+// Each 'KernelType' need define a derived class which inherit
+// 'KernelExecutable'
+// and overwrite the virtual function 'Run'.
+class KernelExecutable {
  public:
-  KernelExecutor();
-  virtual ~KernelExecutor();
-  virtual void run(std::unique_ptr<ExecutionContext>&) = 0;
+  KernelExecutable(const note::Instruction&) {}
+  virtual ~KernelExecutable();
+  virtual void Run(const ExecutableContext&) = 0;
 
  public:
+  void Reset(const note::Instruction&) {}
+
   KernelType GetKernelType() const { return kernel_type_; }
   std::string GetKernelName() const { return kernel_name_; }
   const std::vector<std::string>& GetInputNames() const { return input_names_; }
@@ -51,25 +55,16 @@ class KernelExecutor {
     return output_names_;
   }
 
-  void SetKernelType(KernelType kernel_type) { kernel_type_ = kernel_type; }
-  void SetKernelName(const std::string& kernel_name) {
-    kernel_name_ = kernel_name;
-  }
-  void SetInputNames(const std::vector<std::string>& input_name) {
-    input_names_ = input_name;
-  }
-  void SetOutputNames(const std::vector<std::string>& output_name) {
-    output_names_ = output_name;
-  }
-
  protected:
+  int64_t global_id_;
   KernelType kernel_type_;
   std::string kernel_name_;
   std::vector<std::string> input_names_;
   std::vector<std::string> output_names_;
 };
 
-using KernelExecutors = std::vector<std::unique_ptr<KernelExecutor>>;
+using KernelExecutableMap =
+    std::unordered_map<int64_t, std::unique_ptr<KernelExecutable>>;
 
 }  // namespace backends
 }  // namespace piano

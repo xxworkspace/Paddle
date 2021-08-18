@@ -23,10 +23,10 @@ namespace backends {
 TEST(NvptxIrEmitter, TestOp) {
   llvm::LLVMContext llvm_context;
   llvm::Module llvm_module("test", llvm_context);
-  KernelExecutors kernel_executors_;
+  KernelExecutableMap kernel_executable_map;
 
   // create ir emitter
-  NvptxIrEmitter nvptx_ir_emitter(&llvm_module, &kernel_executors_);
+  NvptxIrEmitter nvptx_ir_emitter(&llvm_module, &kernel_executable_map);
 }
 
 }  // namespace backends

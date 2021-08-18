@@ -26,8 +26,8 @@ class NvptxIrEmitter : public GpuIrEmitter {
  public:
   NvptxIrEmitter() = delete;
   explicit NvptxIrEmitter(llvm::Module* llvm_module,
-                          KernelExecutors* kerenl_executors_)
-      : GpuIrEmitter(llvm_module, kerenl_executors_) {}
+                          KernelExecutableMap* kernel_executable_map)
+      : GpuIrEmitter(llvm_module, kernel_executable_map) {}
   ~NvptxIrEmitter() {}
 
   void VisitBatchNormGrad(const note::Instruction&) override;
