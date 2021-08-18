@@ -14,6 +14,8 @@
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_compiler.h"
 #include <cuda_runtime.h>
+#include <unordered_map>
+#include <
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/CodeGen/CommandFlags.h"
@@ -28,6 +30,22 @@ namespace backends {
 
 namespace nvptx {
 
+#define CUDA_DRIVER_CALL(x)                                             \
+  {                                                                     \
+    CUresult result = x;                                                \
+    if (result != CUDA_SUCCESS && result != CUDA_ERROR_DEINITIALIZED) { \
+      const char* msg;                                                  \
+      cuGetErrorName(result, &msg);                                     \
+    }                                                                   \
+  }
+
+#define CUDA_CALL(func)                                       \
+  {                                                           \
+    cudaError_t e = (func);                                   \
+    ICHECK(e == cudaSuccess || e == cudaErrorCudartUnloading) \
+        << "CUDA: " << cudaGetErrorString(e);                 \
+  }
+
 void InitLlvmNvptxContext() {
   LLVMInitializeNVPTXTarget();
   LLVMInitializeNVPTXTargetInfo();
@@ -40,8 +58,51 @@ std::string GetComputeCapability() {
   cudaGetDeviceProperties(&device_prop, 0);
   int major = device_prop.major;
   int minor = device_prop.minor;
-  return std::to_string(major * 100 + minor);
+  return std::to_string(major * 10 + minor);
 }
+
+class CuModuleRegistry {
+ public:
+  static CuModuleRegistry GetCuModuleRegistry() {
+    static CuModuleRegistry registry_;
+    return registry_;
+  }
+
+  void RegistryCuModule(const std::int64_t module_global_id,
+                        const std::string& ptx) {
+    ptxs[module_global_id] = ptx;
+  }
+
+  CUFunction GetCuFunction(const std::int64_t module_global_id,
+                           const std::string& func_name) {
+    ASSERT_NE(ptxs.count(module_global_id), 0);
+    if (cu_modules.count(module_global_id) == 0) {
+      auto& ptx = ptxs[module_global_id];
+      CUDA_DRIVER_CALL(
+          cuModuleLoadData(&cu_modules[module_global_id], ptx.c_str()));
+    }
+
+    CUFunction cu_func;
+    CUDA_DRIVER_CALL(cuModuleGetFunction(&cu_func, cu_modules[module_global_id],
+                                         func_name.c_str()));
+    return cu_func;
+  }
+
+ private:
+  CuModuleRegistry();
+  ~CuModuleRegistry();
+  std::unordered_map<std::int64_t, CUmodule> cu_modules;
+  std::unordered_map<std::int64_t, std::string> ptxs;
+
+  class Garbage {
+    ~Garbage {
+      auto registry_ = GetCuModuleRegistry();
+      for (auto& cu_module : cu_modules) {
+        CUDA_DRIVER_CALL(cuModuleUnload(cu_module.second));
+      }
+    }
+  } garbage_;
+};
 
 }  // namespace nvptx
 
@@ -54,7 +115,7 @@ void NvptxCompiler::Compile(llvm::Module* llvm_module,
   // convert to ptx
   auto ptx = ConverToPtx(llvm_module);
   // get cu function
-  GetCuFunction(ptx, kernel_executable_map);
+  // GetCuFunction(ptx, kernel_executable_map);
 }
 
 void NvptxCompiler::OptimizeLlvmIR(llvm::Module* llvm_module) {}
@@ -66,7 +127,7 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
       llvm::TargetRegistry::lookupTarget("", llvm_triple, error);
 
   llvm::TargetOptions target_options =
-      llvm::codegen::InitTargetOptionsFromCodeGenFlags(llvm_triple);
+      llvm::codegen::InitTargetOptionsFromCodeGenFlags(llvm::Triple());
 
   target_options.MCOptions.AsmVerbose = false;
   std::string compute_capability = nvptx::GetComputeCapability();
@@ -113,12 +174,14 @@ std::string NvptxCompiler::ConverToPtx(llvm::Module* llvm_module) {
                                       llvm::CGFT_AssemblyFile);
   // run pass
   pass_manager.run(*llvm_module);
-
   return ptx;
 }
 
-void NvptxCompiler::GetCuFunction(const std::string& ptx,
-                                  KernelExecutableMap* kernel_executable_map) {}
+void NvptxCompiler::RegistryCuModule(const int64_t global_id,
+                                     const std::string& ptx) {
+  nvtpx::CuModuleRegistry::GetCuModuleRegistry().RegistryCuModule(global_id,
+                                                                  ptx);
+}
 
 }  // namespace backends
 }  // namespace piano
