@@ -17,19 +17,20 @@
 #include <string>
 #include <unordered_map>
 #include "paddle/fluid/compiler/piano/note/instruction.h"
+#include "paddle/fluid/compiler/piano/note/opcode.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
 // kernel type.
-enum class KernelType {
-  BatchNormGradKernel = 0,
-  BatchNormInference,
-  BatchNormTrainingKernel,
-  ConvolutionKernel,
-  DotKernel,
-  JitKernel,
+enum class KernelType : std::uint32_t {
+  kBatchNormGradKernel = 0,
+  kBatchNormInferenceKernel,
+  kBatchNormTrainingKernel,
+  kConvolutionKernel,
+  kDotKernel,
+  kJitKernel,
 };
 
 // executable context for KernelExecutable.
@@ -41,26 +42,57 @@ struct ExecutableContext {};
 // and overwrite the virtual function 'Run'.
 class KernelExecutable {
  public:
-  KernelExecutable(const note::Instruction&) {}
+  explicit KernelExecutable(const note::Instruction& note_instruction) {
+    Reset(note_instruction);
+  }
   virtual ~KernelExecutable();
   virtual void Run(const ExecutableContext&) = 0;
 
  public:
-  void Reset(const note::Instruction&) {}
+  void Reset(const note::Instruction& note_instruction) {
+    global_id_ = note_instruction.global_id();
+    kernel_name_ = note_instruction.name();
+
+    // initialize KernelType
+    switch (note_instruction.opcode()) {
+      case note::OpCode::kBatchNormGrad:
+        kernel_type_ = KernelType::kBatchNormGradKernel;
+        break;
+      case note::OpCode::kBatchNormInference:
+        kernel_type_ = KernelType::kBatchNormInferenceKernel;
+        break;
+      case note::OpCode::kBatchNormTraining:
+        kernel_type_ = KernelType::kBatchNormTrainingKernel;
+        break;
+      case note::OpCode::kConvolution:
+        kernel_type_ = KernelType::kConvolutionKernel;
+        break;
+      case note::OpCode::kDot:
+        kernel_type_ = KernelType::kDotKernel;
+        break;
+      default:
+        kernel_type_ = KernelType::kJitKernel;
+        break;
+    }
+
+    // get op input global_id and name
+    for (auto operand : note_instruction.operands()) {
+      input_names_.emplace_back(operand->global_id(), operand->name());
+    }
+  }
 
   KernelType GetKernelType() const { return kernel_type_; }
   std::string GetKernelName() const { return kernel_name_; }
-  const std::vector<std::string>& GetInputNames() const { return input_names_; }
-  const std::vector<std::string>& GetOutputNames() const {
-    return output_names_;
+  const std::vector<std::pair<std::int64_t, std::string>>& GetInputNames()
+      const {
+    return input_names_;
   }
 
  protected:
-  int64_t global_id_;
+  std::int64_t global_id_;
   KernelType kernel_type_;
   std::string kernel_name_;
-  std::vector<std::string> input_names_;
-  std::vector<std::string> output_names_;
+  std::vector<std::pair<std::int64_t, std::string>> input_names_;
 };
 
 using KernelExecutableMap =
