@@ -22,16 +22,16 @@ namespace piano {
 namespace backends {
 
 // LlvmCompiler is an abstract compiler class that inherit 'Compiler' with
-// llvm ir as low level IR
+// llvm ir as low level IR.
 // For a particular device compiler with llvm ir should inherit the LlvmCompiler
-// and overwrite the function 'Optimize' and 'Compile'
+// and overwrite the function 'Optimize' and 'Compile'.
 
 class LlvmCompiler : public Compiler {
  public:
   LlvmCompiler() = default;
   virtual ~LlvmCompiler() {}
 
-  KernelExecutableMap Apply(note::Module*) override;
+  KernelExecutableMap Apply(const note::Module&) override;
 
  protected:
   virtual void Optimize(note::Module*) = 0;
