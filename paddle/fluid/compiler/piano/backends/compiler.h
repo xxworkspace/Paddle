@@ -13,9 +13,6 @@
 // limitations under the License.
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
 #include "paddle/fluid/compiler/piano/backends/kernel_executable.h"
 
 namespace paddle {
@@ -29,14 +26,11 @@ namespace backends {
 
 // Compiler is an abstract class for compilation on a particular platform.
 //
-// 'Compiler' ties together note::instruction and codegen (CG) to generate
+// Compiler ties together note::instruction and codegen (CG) to generate
 // efficient binary code for the target platform.
 //
-// 'XXCompiler' class for a particular device inherit 'Compiler' and
-// overwrite the function 'Apply'.
-//
-// KernelExecutableMap is a vector of KernelExecutable.
-// By call function 'Run' in KernelExecutor to execute the binary code.
+// XXCompiler class for a particular device inherit Compiler and
+// overwrite the function Apply.
 
 class Compiler {
  public:

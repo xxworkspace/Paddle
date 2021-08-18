@@ -37,9 +37,10 @@ enum class KernelType : std::uint32_t {
 struct ExecutableContext {};
 
 // KernelExecutable is a kernel execution class, it includes kernel information.
-// Each 'KernelType' need define a derived class which inherit
-// 'KernelExecutable'
-// and overwrite the virtual function 'Run'.
+// Each KernelType need define a derived class which inherit KernelExecutable
+// and overwrite the virtual function Run.
+// By call function Run in KernelExecutor to execute the binary code.
+
 class KernelExecutable {
  public:
   explicit KernelExecutable(const note::Instruction& note_instruction) {
@@ -95,6 +96,7 @@ class KernelExecutable {
   std::vector<std::pair<std::int64_t, std::string>> input_names_;
 };
 
+// KernelExecutableMap is a map of KernelExecutable.
 using KernelExecutableMap =
     std::unordered_map<int64_t, std::unique_ptr<KernelExecutable>>;
 
