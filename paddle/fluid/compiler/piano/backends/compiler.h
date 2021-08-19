@@ -37,7 +37,7 @@ class Compiler {
   Compiler() = default;
   virtual ~Compiler() {}
 
-  virtual KernelExecutableMap Apply(const note::Module&) = 0;
+  virtual KernelExecutableMap Apply(note::Module*) = 0;
 };
 
 }  // namespace backends

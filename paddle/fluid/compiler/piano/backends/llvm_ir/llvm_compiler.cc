@@ -18,10 +18,9 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-KernelExecutableMap LlvmCompiler::Apply(const note::Module& note_module) {
-  note::Module* note_module_ = nullptr;
+KernelExecutableMap LlvmCompiler::Apply(note::Module* note_module) {
   // using pass optimize the note module
-  Optimize(note_module_);
+  Optimize(note_module);
 
   // create llvm module
   llvm::LLVMContext context;
@@ -31,7 +30,7 @@ KernelExecutableMap LlvmCompiler::Apply(const note::Module& note_module) {
   KernelExecutableMap kernel_executable_map;
 
   // conver operator to llvm ir
-  ConvertToIr(*note_module_, llvm_module.get(), &kernel_executable_map);
+  ConvertToIr(*note_module, llvm_module.get(), &kernel_executable_map);
 
   // compiler llvm ir to lowring ir
   Compile(llvm_module.get(), &kernel_executable_map);

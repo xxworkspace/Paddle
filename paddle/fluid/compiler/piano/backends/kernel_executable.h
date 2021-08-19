@@ -51,9 +51,7 @@ class KernelExecutable {
 
  public:
   void Reset(const note::Instruction& note_instruction) {
-    global_id_ = note_instruction.global_id();
     kernel_name_ = note_instruction.name();
-
     // initialize KernelType
     switch (note_instruction.opcode()) {
       case note::OpCode::kBatchNormGrad:
@@ -84,21 +82,17 @@ class KernelExecutable {
 
   KernelType GetKernelType() const { return kernel_type_; }
   std::string GetKernelName() const { return kernel_name_; }
-  const std::vector<std::pair<std::int64_t, std::string>>& GetInputNames()
-      const {
-    return input_names_;
-  }
+  const std::vector<std::string>& GetInputNames() const { return input_names_; }
 
  protected:
-  std::int64_t global_id_;
   KernelType kernel_type_;
   std::string kernel_name_;
-  std::vector<std::pair<std::int64_t, std::string>> input_names_;
+  std::vector<std::string> input_names_;
 };
 
 // KernelExecutableMap is a map of KernelExecutable.
 using KernelExecutableMap =
-    std::unordered_map<int64_t, std::unique_ptr<KernelExecutable>>;
+    std::unordered_map<std::string, std::unique_ptr<KernelExecutable>>;
 
 }  // namespace backends
 }  // namespace piano

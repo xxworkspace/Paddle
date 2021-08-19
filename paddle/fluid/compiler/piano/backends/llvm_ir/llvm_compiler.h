@@ -21,7 +21,7 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-// LlvmCompiler is an abstract compiler class that inherit 'Compiler' with
+// LlvmCompiler is an abstract compiler class that inherit Compiler with
 // llvm ir as low level IR.
 // For a particular device compiler with llvm ir should inherit the LlvmCompiler
 // and overwrite the function 'Optimize' and 'Compile'.
@@ -31,7 +31,7 @@ class LlvmCompiler : public Compiler {
   LlvmCompiler() = default;
   virtual ~LlvmCompiler() {}
 
-  KernelExecutableMap Apply(const note::Module&) override;
+  KernelExecutableMap Apply(note::Module*) override;
 
  protected:
   virtual void Optimize(note::Module*) = 0;
