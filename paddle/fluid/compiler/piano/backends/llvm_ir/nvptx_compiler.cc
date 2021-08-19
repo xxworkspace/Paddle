@@ -54,8 +54,10 @@ void InitLlvmNvptxContext() {
 }
 
 std::string GetComputeCapability() {
+  int device_id = 0;
+  CUDA_CALL(cudaGetDevice(&device_id));
   cudaDeviceProp device_prop;
-  cudaGetDeviceProperties(&device_prop, 0);
+  CUDA_CALL(cudaGetDeviceProperties(&device_prop, device_id));
   int major = device_prop.major;
   int minor = device_prop.minor;
   return std::to_string(major * 10 + minor);
