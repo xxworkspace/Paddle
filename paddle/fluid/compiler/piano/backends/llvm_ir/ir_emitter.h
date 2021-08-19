@@ -26,7 +26,7 @@ namespace backends {
 // For a special hardware, a XXXIrEmitter should be implemented inheriting from
 // IrEmitter and overwrites all the virtual functions.
 // llvm::Module* -> contain kernel llvm IR
-// KernelExecutors -> a vector of KernelExecutor
+// KernelExecutableMap -> a map of KernelExecutable
 // XXXIrEmitter get a llvm::Module* and KernelExecutors* from XXXCompiler when
 // initialize.
 // note::Instruction accept a IrEmitter and choose VisitXXX by note::OpCode

@@ -27,8 +27,8 @@ class GpuIrEmitter : public IrEmitter {
  public:
   GpuIrEmitter() = delete;
   explicit GpuIrEmitter(llvm::Module* llvm_module,
-                        KernelExecutableMap* kernel_executable_map_)
-      : IrEmitter(llvm_module, kernel_executable_map_) {}
+                        KernelExecutableMap* kernel_executable_map)
+      : IrEmitter(llvm_module, kernel_executable_map) {}
   virtual ~GpuIrEmitter() {}
 
   void VisitElementwiseUnary(const note::Instruction&) override;
