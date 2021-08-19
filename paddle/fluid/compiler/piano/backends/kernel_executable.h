@@ -37,9 +37,10 @@ enum class KernelType : std::uint32_t {
 struct ExecutableContext {};
 
 // KernelExecutable is a kernel execution class, it includes kernel information.
-// Each 'KernelType' need define a derived class which inherit
-// 'KernelExecutable'
-// and overwrite the virtual function 'Run'.
+// Each KernelType need define a derived class which inherit KernelExecutable
+// and overwrite the virtual function Run.
+// By call function Run in KernelExecutor to execute the binary code.
+
 class KernelExecutable {
  public:
   explicit KernelExecutable(const note::Instruction& note_instruction) {
@@ -50,9 +51,7 @@ class KernelExecutable {
 
  public:
   void Reset(const note::Instruction& note_instruction) {
-    global_id_ = note_instruction.global_id();
     kernel_name_ = note_instruction.name();
-
     // initialize KernelType
     switch (note_instruction.opcode()) {
       case note::OpCode::kBatchNormGrad:
@@ -77,26 +76,23 @@ class KernelExecutable {
 
     // get op input global_id and name
     for (auto operand : note_instruction.operands()) {
-      input_names_.emplace_back(operand->global_id(), operand->name());
+      input_names_.emplace_back(operand->name());
     }
   }
 
   KernelType GetKernelType() const { return kernel_type_; }
   std::string GetKernelName() const { return kernel_name_; }
-  const std::vector<std::pair<std::int64_t, std::string>>& GetInputNames()
-      const {
-    return input_names_;
-  }
+  const std::vector<std::string>& GetInputNames() const { return input_names_; }
 
  protected:
-  std::int64_t global_id_;
   KernelType kernel_type_;
   std::string kernel_name_;
-  std::vector<std::pair<std::int64_t, std::string>> input_names_;
+  std::vector<std::string> input_names_;
 };
 
+// KernelExecutableMap is a map of KernelExecutable.
 using KernelExecutableMap =
-    std::unordered_map<int64_t, std::unique_ptr<KernelExecutable>>;
+    std::unordered_map<std::string, std::unique_ptr<KernelExecutable>>;
 
 }  // namespace backends
 }  // namespace piano
