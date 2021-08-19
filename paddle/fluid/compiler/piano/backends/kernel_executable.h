@@ -76,7 +76,7 @@ class KernelExecutable {
 
     // get op input global_id and name
     for (auto operand : note_instruction.operands()) {
-      input_names_.emplace_back(operand->global_id(), operand->name());
+      input_names_.emplace_back(operand->name());
     }
   }
 

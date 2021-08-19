@@ -28,7 +28,8 @@ namespace backends {
 TEST(NvptxCompiler, Apply) {
   NvptxCompiler nvptx_compiler;
   note::Module note_module;
-  auto kernel_executable_map = nvptx_compiler.Apply(&note_module);
+  auto kernel_executable_map = nvptx_compiler.Apply(note_module);
+  // TODO(sunli) : Add test code.
 }
 
 }  // namespace backends

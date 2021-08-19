@@ -31,7 +31,7 @@ class LlvmCompiler : public Compiler {
   LlvmCompiler() = default;
   virtual ~LlvmCompiler() {}
 
-  KernelExecutableMap Apply(note::Module*) override;
+  KernelExecutableMap Apply(const note::Module&) override;
 
  protected:
   virtual void Optimize(note::Module*) = 0;
