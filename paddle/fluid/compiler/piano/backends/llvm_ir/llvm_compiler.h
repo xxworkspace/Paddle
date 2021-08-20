@@ -31,14 +31,18 @@ class LlvmCompiler : public Compiler {
   LlvmCompiler() = default;
   virtual ~LlvmCompiler() {}
 
-  KernelExecutableMap Apply(const note::Module&) override;
+  KernelExecutableMap Apply(note::Module*) override;
 
  protected:
   // use pass to optimize the note::Module, such as dce、fusion、rewriter.
   virtual void Optimize(note::Module*) = 0;
-  // convert each note::Instruction in note::Module to llvm ir.
+
+  // convert each note::Instruction in note::Module to llvm ir and get execution
+  // args.
   void ConvertToIr(const note::Module&, llvm::Module*, KernelExecutableMap*);
-  // comile llvm::module to executable binary code on tareget device.
+
+  // use llvm ir pass to optimize the llvm::Module and comile llvm::module to
+  // executable binary code on tareget device.
   virtual void Compile(llvm::Module*, KernelExecutableMap*) = 0;
 };
 
