@@ -46,5 +46,13 @@ std::string Layout::ToString() const {
 
 bool Layout::Valid() const { return !minor_to_major().empty(); }
 
+bool Layout::operator==(const Layout& other) const {
+  if (minor_to_major() != other.minor_to_major()) {
+    return false;
+  }
+
+  return true;
+}
+
 }  // namespace piano
 }  // namespace paddle

@@ -63,6 +63,36 @@ class Shape {
   bool IsArray() const { return !IsTuple(); }
   bool IsTuple() const { return element_type() == note::ELEMENT_TYPE_TUPLE; }
 
+  // an option indicates how to compare two shapes
+  struct CompareOption {
+    CompareOption& IgnoreElementType() {
+      ignore_element_type = true;
+      return *this;
+    }
+
+    CompareOption& IgnoreDimensions() {
+      ignore_dimensions = true;
+      return *this;
+    }
+
+    CompareOption& IgnoreLayout() {
+      ignore_layout = true;
+      return *this;
+    }
+
+    bool ignore_element_type = false;
+    bool ignore_dimensions = false;
+    bool ignore_layout = false;
+  };
+
+  // overload euqal operator that tests all fields of the shape are the same
+  bool EqualTo(const Shape& other, const CompareOption& option) const;
+  bool operator==(const Shape& other) const {
+    static CompareOption default_option;
+    return EqualTo(other, default_option);
+  }
+  bool operator!=(const Shape& other) const { return !(*this == other); }
+
   // The following methods for accessing the data member of a Shape object
   // stores.
   //

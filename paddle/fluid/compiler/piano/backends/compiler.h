@@ -37,8 +37,9 @@ class Compiler {
   Compiler() = default;
   virtual ~Compiler() {}
 
-  // TODO(sunli) :To return Changed note::Module.
-  virtual KernelExecutableMap Apply(const note::Module&) = 0;
+  // Compiler will optimize the note::Module with pass and the note::Module will
+  // be updated.
+  virtual KernelExecutableMap Apply(note::Module*) = 0;
 };
 
 }  // namespace backends
