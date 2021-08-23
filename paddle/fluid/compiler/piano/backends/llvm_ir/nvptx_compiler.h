@@ -30,13 +30,13 @@ class NvptxCompiler : public LlvmCompiler {
 
  protected:
   void Optimize(note::Module*) override;
-  void Compile(llvm::Module*, KernelExecutableMap*) override;
+  void Compile(const note::Module&, llvm::Module*,
+               KernelExecutableMap*) override;
 
  private:
   void OptimizeLlvmIR(llvm::Module*);
   std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
   std::string ConverToPtx(llvm::Module*);
-  void RegistryCuModule(const int64_t, const std::string&);
 
   std::string GetLlvmTriple() const { return "nvptx64-nvidia-cuda"; }
   std::string GetLlvmDataLayout() const {

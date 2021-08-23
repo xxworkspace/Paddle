@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_compiler.h"
+#include <cuda.h>
 #include <cuda_runtime.h>
+#include <mutex>
 #include <unordered_map>
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
@@ -22,6 +24,9 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_executable.h"
+#include "paddle/fluid/platform/enforce.h"
+#include "paddle/fluid/platform/errors.h"
 
 namespace paddle {
 namespace piano {
@@ -29,23 +34,7 @@ namespace backends {
 
 namespace nvptx {
 
-#define CUDA_DRIVER_CALL(x)                                             \
-  {                                                                     \
-    CUresult result = x;                                                \
-    if (result != CUDA_SUCCESS && result != CUDA_ERROR_DEINITIALIZED) { \
-      const char* msg;                                                  \
-      cuGetErrorName(result, &msg);                                     \
-    }                                                                   \
-  }
-
-#define CUDA_CALL(func)                                       \
-  {                                                           \
-    cudaError_t e = (func);                                   \
-    ICHECK(e == cudaSuccess || e == cudaErrorCudartUnloading) \
-        << "CUDA: " << cudaGetErrorString(e);                 \
-  }
-
-void InitLlvmNvptxContext() {
+void InitLlvmNvptxContextOnce() {
   LLVMInitializeNVPTXTarget();
   LLVMInitializeNVPTXTargetInfo();
   LLVMInitializeNVPTXTargetMC();
@@ -54,52 +43,125 @@ void InitLlvmNvptxContext() {
 
 std::string GetComputeCapability() {
   int device_id = 0;
-  CUDA_CALL(cudaGetDevice(&device_id));
+  PADDLE_ENFORCE_EQ(
+      cudaGetDevice(&device_id), 0,
+      platform::errors::Unavailable("Cuda device is unavailable!"));
   cudaDeviceProp device_prop;
-  CUDA_CALL(cudaGetDeviceProperties(&device_prop, device_id));
+  PADDLE_ENFORCE_EQ(
+      cudaGetDeviceProperties(&device_prop, device_id), 0,
+      platform::errors::Fatal("Fail to get cuda device properties!"));
   int major = device_prop.major;
   int minor = device_prop.minor;
-  return std::to_string(major * 10 + minor);
+  return "sm_" + std::to_string(major * 10 + minor);
 }
 
+//
 class CuModuleRegistry {
  public:
-  static CuModuleRegistry GetCuModuleRegistry() {
+  ~CuModuleRegistry() {}
+  static CuModuleRegistry& GetCuModuleRegistry() {
     static CuModuleRegistry registry_;
     return registry_;
   }
 
-  void RegistryCuModule(const std::int64_t module_global_id,
+  // registry ptx with note::Module's name
+  void RegistryCuModule(const std::string& module_name,
                         const std::string& ptx) {
-    ptxs[module_global_id] = ptx;
+    PADDLE_ENFORCE_EQ(
+        ptxs.count(module_name), 0,
+        platform::errors::AlreadyExists(
+            "note::Module name = %s has be registered!", module_name));
+    ptxs[module_name] = ptx;
   }
 
-  CUFunction GetCuFunction(const std::int64_t module_global_id,
+  // get a CUfunction from primary context in device_id.
+  CUfunction GetCuFunction(const std::string& module_name,
                            const std::string& func_name) {
-    ASSERT_NE(ptxs.count(module_global_id), 0);
-    if (cu_modules.count(module_global_id) == 0) {
-      auto& ptx = ptxs[module_global_id];
-      CUDA_DRIVER_CALL(
-          cuModuleLoadData(&cu_modules[module_global_id], ptx.c_str()));
+    PADDLE_ENFORCE_EQ(ptxs.count(module_name), 1,
+                      platform::errors::Unavailable(
+                          "note::Module name = %s is not found!", module_name));
+    // get current device id.
+    int device_id = 0;
+    PADDLE_ENFORCE_EQ(
+        cudaGetDevice(&device_id), 0,
+        platform::errors::Unavailable("Cuda device is unavailable!"));
+
+    // module_name + "_" + str(device_id)
+    std::string module_device_id =
+        module_name + "_" + std::to_string(device_id);
+    if (cu_modules.count(module_device_id) == 0) {
+      // As CUmodule is not loaded on current primary context, so load CUmodule
+      // first.
+      std::mutex mtx;
+      std::lock_guard<std::mutex> lock(mtx);
+      {
+        if (cu_modules.count(module_device_id) == 0) {
+          CUdevice device;
+          CUcontext context;
+          // get current CUdevice.
+          PADDLE_ENFORCE_EQ(
+              cuDeviceGet(&device, device_id), 0,
+              platform::errors::Fatal("Fail to get CUdevice on device = %d",
+                                      device_id));
+          // get current primary CUcontext.
+          PADDLE_ENFORCE_EQ(cuCtxGetCurrent(&context), 0,
+                            platform::errors::Fatal("Fail to get CUcontext!"));
+          // retain primary context for driver api to use.
+          PADDLE_ENFORCE_EQ(
+              cuDevicePrimaryCtxRetain(&context, device), 0,
+              platform::errors::Fatal("Fail to Retain PrimaryCtx!"));
+          // load CUmodule from ptx.
+          PADDLE_ENFORCE_EQ(
+              cuModuleLoadData(&cu_modules[module_device_id],
+                               ptxs[module_name].c_str()),
+              0, platform::errors::Fatal("note::Module name = %s fail to load "
+                                         "CUmodule on device_id = %d !",
+                                         module_name, device_id));
+        }
+      }
     }
 
-    CUFunction cu_func;
-    CUDA_DRIVER_CALL(cuModuleGetFunction(&cu_func, cu_modules[module_global_id],
-                                         func_name.c_str()));
+    // As CUmodule is loaded, using function name to retrival the CUfuction.
+    CUfunction cu_func;
+    PADDLE_ENFORCE_EQ(
+        cuModuleGetFunction(&cu_func, cu_modules[module_device_id],
+                            func_name.c_str()),
+        0, platform::errors::Unavailable(
+               "note::Module name = %s fail to find CUfunction name = %s",
+               module_name, func_name));
     return cu_func;
   }
 
  private:
-  CuModuleRegistry();
-  ~CuModuleRegistry();
-  std::unordered_map<std::int64_t, CUmodule> cu_modules;
-  std::unordered_map<std::int64_t, std::string> ptxs;
+  CuModuleRegistry() {}
+  DISABLE_COPY_AND_ASSIGN(CuModuleRegistry);
+  // CUmodule map for each module and ptx.
+  // KEY = module name + "_" + std::to_string(device_id).
+  std::unordered_map<std::string, CUmodule> cu_modules;
+  // ptx map for each module.
+  std::unordered_map<std::string, std::string> ptxs;
 
+  // free CUmodule.
   class Garbage {
-    ~Garbage {
-      auto registry_ = GetCuModuleRegistry();
-      for (auto& cu_module : cu_modules) {
-        CUDA_DRIVER_CALL(cuModuleUnload(cu_module.second));
+   public:
+    ~Garbage() noexcept(false) {
+      int count = 0;
+      PADDLE_ENFORCE_EQ(cudaGetDeviceCount(&count), 0,
+                        platform::errors::Fatal("Fail to get device count!"));
+      auto& cumodule_registry = GetCuModuleRegistry();
+      for (auto& p : cumodule_registry.ptxs) {
+        for (int idx = 0; idx < count; ++idx) {
+          std::string module_device_id = p.first + "_" + std::to_string(idx);
+          PADDLE_ENFORCE_EQ(
+              cudaSetDevice(idx), 0,
+              platform::errors::Fatal("Fail to set device id = %d", idx));
+          if (cumodule_registry.cu_modules.count(module_device_id) > 0) {
+            PADDLE_ENFORCE_EQ(
+                cuModuleUnload(cumodule_registry.cu_modules[module_device_id]),
+                0, platform::errors::Fatal("Fail to unload CUmodule name = %s",
+                                           module_device_id));
+          }
+        }
       }
     }
   } garbage_;
@@ -109,14 +171,14 @@ class CuModuleRegistry {
 
 void NvptxCompiler::Optimize(note::Module*) {}
 
-void NvptxCompiler::Compile(llvm::Module* llvm_module,
+void NvptxCompiler::Compile(const note::Module&, llvm::Module* llvm_module,
                             KernelExecutableMap* kernel_executable_map) {
   // optimize llvm ir
   OptimizeLlvmIR(llvm_module);
   // convert to ptx
   auto ptx = ConverToPtx(llvm_module);
-  // get cu function
-  // GetCuFunction(ptx, kernel_executable_map);
+  // TODO(sunli) : note::Module name
+  nvptx::CuModuleRegistry::GetCuModuleRegistry().RegistryCuModule("", ptx);
 }
 
 void NvptxCompiler::OptimizeLlvmIR(llvm::Module* llvm_module) {}
@@ -134,7 +196,7 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
   std::string compute_capability = nvptx::GetComputeCapability();
 
   llvm::CodeGenOpt::Level codegen_opt_level;
-  int optimization_level = 1;
+  int optimization_level = 2;
   switch (optimization_level) {
     case 1:
       codegen_opt_level = llvm::CodeGenOpt::Less;
@@ -159,7 +221,7 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
 std::string NvptxCompiler::ConverToPtx(llvm::Module* llvm_module) {
   // init context
   static std::once_flag call_once_flag_;
-  std::call_once(call_once_flag_, nvptx::InitLlvmNvptxContext);
+  std::call_once(call_once_flag_, nvptx::InitLlvmNvptxContextOnce);
   // get target machine
   auto target_machine =
       GetTargetMachine(llvm::Triple(llvm_module->getTargetTriple()));
@@ -176,12 +238,6 @@ std::string NvptxCompiler::ConverToPtx(llvm::Module* llvm_module) {
   // run pass
   pass_manager.run(*llvm_module);
   return ptx;
-}
-
-void NvptxCompiler::RegistryCuModule(const int64_t global_id,
-                                     const std::string& ptx) {
-  nvtpx::CuModuleRegistry::GetCuModuleRegistry().RegistryCuModule(global_id,
-                                                                  ptx);
 }
 
 }  // namespace backends
