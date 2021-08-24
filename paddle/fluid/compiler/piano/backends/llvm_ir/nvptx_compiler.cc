@@ -27,6 +27,7 @@
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_executable.h"
 #include "paddle/fluid/platform/enforce.h"
 #include "paddle/fluid/platform/errors.h"
+#include "paddle/fluid/platform/gpu_info.h"
 
 namespace paddle {
 namespace piano {
@@ -42,20 +43,11 @@ void InitLlvmNvptxContextOnce() {
 }
 
 std::string GetComputeCapability() {
-  int device_id = 0;
-  PADDLE_ENFORCE_EQ(
-      cudaGetDevice(&device_id), 0,
-      platform::errors::Unavailable("Cuda device is unavailable!"));
-  cudaDeviceProp device_prop;
-  PADDLE_ENFORCE_EQ(
-      cudaGetDeviceProperties(&device_prop, device_id), 0,
-      platform::errors::Fatal("Fail to get cuda device properties!"));
-  int major = device_prop.major;
-  int minor = device_prop.minor;
-  return "sm_" + std::to_string(major * 10 + minor);
+  int device_id = platform::GetCurrentDeviceId();
+  int capability = platform::GetCUDAComputeCapability(device_id);
+  return "sm_" + std::to_string(capability);
 }
 
-//
 class CuModuleRegistry {
  public:
   ~CuModuleRegistry() {}
@@ -81,11 +73,7 @@ class CuModuleRegistry {
                       platform::errors::Unavailable(
                           "note::Module name = %s is not found!", module_name));
     // get current device id.
-    int device_id = 0;
-    PADDLE_ENFORCE_EQ(
-        cudaGetDevice(&device_id), 0,
-        platform::errors::Unavailable("Cuda device is unavailable!"));
-
+    int device_id = platform::GetCurrentDeviceId();
     // module_name + "_" + str(device_id)
     std::string module_device_id =
         module_name + "_" + std::to_string(device_id);
@@ -145,16 +133,12 @@ class CuModuleRegistry {
   class Garbage {
    public:
     ~Garbage() noexcept(false) {
-      int count = 0;
-      PADDLE_ENFORCE_EQ(cudaGetDeviceCount(&count), 0,
-                        platform::errors::Fatal("Fail to get device count!"));
+      int count = platform::GetCUDADeviceCount();
       auto& cumodule_registry = GetCuModuleRegistry();
       for (auto& p : cumodule_registry.ptxs) {
         for (int idx = 0; idx < count; ++idx) {
+          platform::SetDeviceId(idx);
           std::string module_device_id = p.first + "_" + std::to_string(idx);
-          PADDLE_ENFORCE_EQ(
-              cudaSetDevice(idx), 0,
-              platform::errors::Fatal("Fail to set device id = %d", idx));
           if (cumodule_registry.cu_modules.count(module_device_id) > 0) {
             PADDLE_ENFORCE_EQ(
                 cuModuleUnload(cumodule_registry.cu_modules[module_device_id]),
@@ -174,14 +158,12 @@ void NvptxCompiler::Optimize(note::Module*) {}
 void NvptxCompiler::Compile(const note::Module&, llvm::Module* llvm_module,
                             KernelExecutableMap* kernel_executable_map) {
   // optimize llvm ir
-  OptimizeLlvmIR(llvm_module);
+  // OptimizeLlvmIR(llvm_module);
   // convert to ptx
   auto ptx = ConverToPtx(llvm_module);
   // TODO(sunli) : note::Module name
   nvptx::CuModuleRegistry::GetCuModuleRegistry().RegistryCuModule("", ptx);
 }
-
-void NvptxCompiler::OptimizeLlvmIR(llvm::Module* llvm_module) {}
 
 std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
     llvm::Triple llvm_triple) {

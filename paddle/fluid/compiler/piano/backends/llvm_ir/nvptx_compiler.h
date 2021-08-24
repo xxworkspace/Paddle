@@ -13,7 +13,6 @@
 // limitations under the License.
 #pragma once
 
-#include <mutex>
 #include "llvm/Target/TargetMachine.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/llvm_compiler.h"
 
@@ -34,7 +33,6 @@ class NvptxCompiler : public LlvmCompiler {
                KernelExecutableMap*) override;
 
  private:
-  void OptimizeLlvmIR(llvm::Module*);
   std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
   std::string ConverToPtx(llvm::Module*);
 

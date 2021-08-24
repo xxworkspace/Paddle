@@ -19,6 +19,8 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
+// Nvptx Executable for nvidia jit execution.
+// TODO(sunli) : overwrite the function Run.
 class NvtpxExecutable : public KernelExecutable {
  public:
   NvtpxExecutable(const std::string module_name,

@@ -15,6 +15,7 @@
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_compiler.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
+#include "llvm/Support/Host.h"
 
 namespace paddle {
 namespace piano {
