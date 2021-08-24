@@ -25,7 +25,7 @@ KernelExecutableMap LlvmCompiler::Apply(note::Module* note_module) {
   // create llvm module
   llvm::LLVMContext context;
   // TODO(sunli) : set llvm_module name.
-  llvm::Module llvm_module("", context);
+  llvm::Module llvm_module(note_module->name(), context);
 
   // create kernel executor
   KernelExecutableMap kernel_executable_map;

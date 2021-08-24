@@ -14,13 +14,10 @@
 #pragma once
 
 #include "paddle/fluid/compiler/piano/backends/kernel_executable.h"
+#include "paddle/fluid/compiler/piano/note/module.h"
 
 namespace paddle {
 namespace piano {
-
-namespace note {
-class Module;
-}
 
 namespace backends {
 

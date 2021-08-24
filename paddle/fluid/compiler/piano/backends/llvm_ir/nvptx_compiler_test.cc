@@ -16,19 +16,30 @@
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 #include "llvm/Support/Host.h"
+#include "paddle/fluid/compiler/piano/note/instruction.h"
+#include "paddle/fluid/compiler/piano/note/opcode.h"
+#include "paddle/fluid/compiler/piano/note_builder.h"
 
 namespace paddle {
 namespace piano {
-
-namespace note {
-class Module {};
-}  // namespace note
-
 namespace backends {
 
 TEST(NvptxCompiler, Apply) {
+  NoteBuilder note_builder("test_note_builder");
+
+  std::vector<Operand> ops;
+  ops.push_back(note_builder.AppendInstruction(note::InstructionProto(),
+                                               note::OpCode::kConstant, {}));
+  ops.push_back(note_builder.AppendInstruction(note::InstructionProto(),
+                                               note::OpCode::kConstant, {}));
+  note_builder.AppendInstruction(note::InstructionProto(), note::OpCode::kAdd,
+                                 ops);
+
+  auto note_proto = note_builder.Build();
+  note::Module note_module(note_proto);
+
   NvptxCompiler nvptx_compiler;
-  note::Module note_module;
+  // note::Module note_module;
   auto kernel_executable_map = nvptx_compiler.Apply(&note_module);
   // TODO(sunli) : Add test code.
 }

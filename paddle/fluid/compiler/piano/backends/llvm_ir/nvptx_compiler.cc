@@ -21,6 +21,8 @@
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/CodeGen/CommandFlags.h"
 #include "llvm/IR/LegacyPassManager.h"
+#include "llvm/InitializePasses.h"
+#include "llvm/Pass.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
@@ -35,11 +37,27 @@ namespace backends {
 
 namespace nvptx {
 
-void InitLlvmNvptxContextOnce() {
+void InitLlvmNvptxContext() {
+  // init target
   LLVMInitializeNVPTXTarget();
   LLVMInitializeNVPTXTargetInfo();
   LLVMInitializeNVPTXTargetMC();
   LLVMInitializeNVPTXAsmPrinter();
+  // get pass registry
+  llvm::PassRegistry* pass_registry = llvm::PassRegistry::getPassRegistry();
+  // registry optimize pass
+  llvm::initializeCore(*pass_registry);
+  llvm::initializeCodeGen(*pass_registry);
+  llvm::initializeScalarOpts(*pass_registry);
+  llvm::initializeObjCARCOpts(*pass_registry);
+  llvm::initializeVectorization(*pass_registry);
+  llvm::initializeIPO(*pass_registry);
+  llvm::initializeAnalysis(*pass_registry);
+  llvm::initializeTransformUtils(*pass_registry);
+  llvm::initializeInstCombine(*pass_registry);
+  llvm::initializeInstrumentation(*pass_registry);
+  llvm::initializeTarget(*pass_registry);
+  llvm::initializeCodeGenPreparePass(*pass_registry);
 }
 
 std::string GetComputeCapability() {
@@ -155,27 +173,39 @@ class CuModuleRegistry {
 
 void NvptxCompiler::Optimize(note::Module*) {}
 
-void NvptxCompiler::Compile(const note::Module&, llvm::Module* llvm_module,
+void NvptxCompiler::Compile(const note::Module& note_module,
+                            llvm::Module* llvm_module,
                             KernelExecutableMap* kernel_executable_map) {
-  // optimize llvm ir
-  // OptimizeLlvmIR(llvm_module);
+  // set triple and datalayout
+  llvm_module->setTargetTriple(llvm::StringRef(GetLlvmTriple()));
+  llvm_module->setDataLayout(llvm::StringRef(GetLlvmDataLayout()));
+
   // convert to ptx
   auto ptx = ConverToPtx(llvm_module);
-  // TODO(sunli) : note::Module name
-  nvptx::CuModuleRegistry::GetCuModuleRegistry().RegistryCuModule("", ptx);
+
+  // registry ptx
+  nvptx::CuModuleRegistry::GetCuModuleRegistry().RegistryCuModule(
+      note_module.name(), ptx);
 }
 
 std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
     llvm::Triple llvm_triple) {
+  // lookupTarget
   std::string error = "";
   const llvm::Target* target =
       llvm::TargetRegistry::lookupTarget("", llvm_triple, error);
 
-  llvm::TargetOptions target_options =
-      llvm::codegen::InitTargetOptionsFromCodeGenFlags(llvm::Triple());
-
+  // target_options
+  llvm::TargetOptions target_options;
+  target_options.AllowFPOpFusion = llvm::FPOpFusion::Fast;
+  target_options.UnsafeFPMath = false;
+  target_options.NoInfsFPMath = false;
+  target_options.NoNaNsFPMath = true;
+  target_options.FloatABIType = llvm::FloatABI::Soft;
   target_options.MCOptions.AsmVerbose = false;
+
   std::string compute_capability = nvptx::GetComputeCapability();
+  std::cerr << compute_capability << std::endl;
 
   llvm::CodeGenOpt::Level codegen_opt_level;
   int optimization_level = 2;
@@ -193,24 +223,27 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
       codegen_opt_level = llvm::CodeGenOpt::None;
   }
 
+  // triple mcpu mattr opt
   return std::unique_ptr<llvm::TargetMachine>(target->createTargetMachine(
       llvm_triple.str(), llvm::StringRef(compute_capability),
-      llvm::StringRef("+ptx60"), target_options,
-      llvm::codegen::getExplicitRelocModel(),
-      llvm::codegen::getExplicitCodeModel(), codegen_opt_level));
+      llvm::StringRef("+ptx60"), target_options, llvm::Reloc::PIC_,
+      llvm::CodeModel::Medium, codegen_opt_level));
 }
 
 std::string NvptxCompiler::ConverToPtx(llvm::Module* llvm_module) {
   // init context
   static std::once_flag call_once_flag_;
-  std::call_once(call_once_flag_, nvptx::InitLlvmNvptxContextOnce);
+  std::call_once(call_once_flag_, nvptx::InitLlvmNvptxContext);
+
   // get target machine
   auto target_machine =
       GetTargetMachine(llvm::Triple(llvm_module->getTargetTriple()));
+
   // create pass
   llvm::legacy::PassManager pass_manager;
   pass_manager.add(new llvm::TargetLibraryInfoWrapperPass(
       llvm::Triple(llvm_module->getTargetTriple())));
+
   // ptx
   std::string ptx = "";
   llvm::raw_string_ostream string_stream(ptx);
