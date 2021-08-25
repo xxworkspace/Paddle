@@ -24,7 +24,6 @@ namespace backends {
 
 class NvptxIrEmitter : public GpuIrEmitter {
  public:
-  NvptxIrEmitter() = delete;
   NvptxIrEmitter(llvm::Module* llvm_module,
                  KernelExecutableMap* kernel_executable_map)
       : GpuIrEmitter(llvm_module, kernel_executable_map) {}
