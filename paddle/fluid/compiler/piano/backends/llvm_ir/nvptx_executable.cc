@@ -18,7 +18,7 @@ namespace paddle {
 namespace piano {
 namespace backends {
 
-void NvtpxExecutable::Run(const ExecutableContext& executable_context) {
+void NvtpxExecutable::Launch(const ExecutableContext& executable_context) {
   // TODO(sunli) : when execution is determined.
 }
 

@@ -57,6 +57,7 @@ extern bool HasCUDADriver();
   __macro(cuLaunchKernel);                              \
   __macro(cuCtxCreate);                                 \
   __macro(cuCtxGetCurrent);                             \
+  __macro(cuDeviceGet);                                 \
   __macro(cuDeviceGetCount);                            \
   __macro(cuDevicePrimaryCtxGetState);                  \
   __macro(cuDevicePrimaryCtxRetain)

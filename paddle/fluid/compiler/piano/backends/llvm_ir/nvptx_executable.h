@@ -28,7 +28,7 @@ class NvtpxExecutable : public KernelExecutable {
       : KernelExecutable(note_instruction) {
     module_name_ = module_name;
   }
-  void Run(const ExecutableContext&) override;
+  void Launch(const ExecutableContext&) override;
 
  private:
   int device_to_execute_{-1};

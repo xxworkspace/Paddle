@@ -27,6 +27,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_executable.h"
+#include "paddle/fluid/platform/dynload/cuda_driver.h"
 #include "paddle/fluid/platform/enforce.h"
 #include "paddle/fluid/platform/errors.h"
 #include "paddle/fluid/platform/gpu_info.h"
@@ -66,31 +67,30 @@ std::string GetComputeCapability() {
   return "sm_" + std::to_string(capability);
 }
 
-class CuModuleRegistry {
+class CUmodulePool {
  public:
-  ~CuModuleRegistry() {}
-  static CuModuleRegistry& GetCuModuleRegistry() {
-    static CuModuleRegistry registry_;
-    return registry_;
+  ~CUmodulePool() {}
+  static CUmodulePool& GetCUmodulePool() {
+    static CUmodulePool cumodule_pool;
+    return cumodule_pool;
   }
 
   // registry ptx with note::Module's name
-  void RegistryCuModule(const std::string& module_name,
-                        const std::string& ptx) {
+  void InsertCUmodule(const std::string& module_name, const std::string& ptx) {
     PADDLE_ENFORCE_EQ(
-        ptxs.count(module_name), 0,
+        ptx_map_.count(module_name), 0,
         platform::errors::AlreadyExists(
-            "note::Module name = %s has be registered!", module_name));
+            "note::Module name = %s has be inserted!", module_name));
 
     std::mutex mtx;
     std::lock_guard<std::mutex> lock(mtx);
-    ptxs[module_name] = ptx;
+    ptx_map_[module_name] = ptx;
   }
 
   // get a CUfunction from primary context in device_id.
-  CUfunction GetCuFunction(const std::string& module_name,
+  CUfunction GetCUfunction(const std::string& module_name,
                            const std::string& func_name) {
-    PADDLE_ENFORCE_EQ(ptxs.count(module_name), 1,
+    PADDLE_ENFORCE_EQ(ptx_map_.count(module_name), 1,
                       platform::errors::Unavailable(
                           "note::Module name = %s is not found!", module_name));
     // get current device id.
@@ -98,34 +98,35 @@ class CuModuleRegistry {
     // module_name + "_" + str(device_id)
     std::string module_device_id =
         module_name + "_" + std::to_string(device_id);
-    if (cu_modules.count(module_device_id) == 0) {
+    if (cumodule_map_.count(module_device_id) == 0) {
       // As CUmodule is not loaded on current primary context, so load CUmodule
       // first.
       std::mutex mtx;
       std::lock_guard<std::mutex> lock(mtx);
       {
-        if (cu_modules.count(module_device_id) == 0) {
+        if (cumodule_map_.count(module_device_id) == 0) {
           CUdevice device;
           CUcontext context;
           // get current CUdevice.
           PADDLE_ENFORCE_EQ(
-              cuDeviceGet(&device, device_id), 0,
-              platform::errors::Fatal("Fail to get CUdevice on device = %d",
-                                      device_id));
+              platform::dynload::cuDeviceGet(&device, device_id), CUDA_SUCCESS,
+              platform::errors::External(
+                  "Fail to get CUdevice width device id = %d !", device_id));
           // get current primary CUcontext.
-          PADDLE_ENFORCE_EQ(cuCtxGetCurrent(&context), 0,
-                            platform::errors::Fatal("Fail to get CUcontext!"));
+          PADDLE_ENFORCE_EQ(
+              platform::dynload::cuCtxGetCurrent(&context), CUDA_SUCCESS,
+              platform::errors::External("Fail to get CUcontext!"));
           // retain primary context for driver api to use.
           PADDLE_ENFORCE_EQ(
-              cuDevicePrimaryCtxRetain(&context, device), 0,
-              platform::errors::Fatal("Fail to Retain PrimaryCtx!"));
+              platform::dynload::cuDevicePrimaryCtxRetain(&context, device),
+              CUDA_SUCCESS,
+              platform::errors::External("Fail to retain CUcontext!"));
           // load CUmodule from ptx.
-          PADDLE_ENFORCE_EQ(
-              cuModuleLoadData(&cu_modules[module_device_id],
-                               ptxs[module_name].c_str()),
-              0, platform::errors::Fatal("note::Module name = %s fail to load "
-                                         "CUmodule on device_id = %d !",
-                                         module_name, device_id));
+          PADDLE_ENFORCE_EQ(platform::dynload::cuModuleLoadData(
+                                &cumodule_map_[module_device_id],
+                                ptx_map_[module_name].c_str()),
+                            CUDA_SUCCESS, platform::errors::External(
+                                              "Fail to load CUmodule!"));
         }
       }
     }
@@ -133,38 +134,38 @@ class CuModuleRegistry {
     // As CUmodule is loaded, using function name to retrival the CUfuction.
     CUfunction cu_func;
     PADDLE_ENFORCE_EQ(
-        cuModuleGetFunction(&cu_func, cu_modules[module_device_id],
-                            func_name.c_str()),
-        0, platform::errors::Unavailable(
-               "note::Module name = %s fail to find CUfunction name = %s",
-               module_name, func_name));
+        platform::dynload::cuModuleGetFunction(
+            &cu_func, cumodule_map_[module_device_id], func_name.c_str()),
+        CUDA_SUCCESS,
+        platform::errors::External("Fail to get CUfunction = %s !", func_name));
     return cu_func;
   }
 
  private:
-  CuModuleRegistry() {}
-  DISABLE_COPY_AND_ASSIGN(CuModuleRegistry);
+  CUmodulePool() {}
+  DISABLE_COPY_AND_ASSIGN(CUmodulePool);
   // CUmodule map for each module and ptx.
   // KEY = module name + "_" + std::to_string(device_id).
-  std::unordered_map<std::string, CUmodule> cu_modules;
+  std::unordered_map<std::string, CUmodule> cumodule_map_;
   // ptx map for each module.
-  std::unordered_map<std::string, std::string> ptxs;
+  std::unordered_map<std::string, std::string> ptx_map_;
 
   // free CUmodule.
   class Garbage {
    public:
     ~Garbage() noexcept(false) {
       int count = platform::GetCUDADeviceCount();
-      auto& cumodule_registry = GetCuModuleRegistry();
-      for (auto& p : cumodule_registry.ptxs) {
+      auto& cumodule_registry = GetCUmodulePool();
+      for (auto& p : cumodule_registry.ptx_map_) {
         for (int idx = 0; idx < count; ++idx) {
           platform::SetDeviceId(idx);
           std::string module_device_id = p.first + "_" + std::to_string(idx);
-          if (cumodule_registry.cu_modules.count(module_device_id) > 0) {
+          if (cumodule_registry.cumodule_map_.count(module_device_id) > 0) {
             PADDLE_ENFORCE_EQ(
-                cuModuleUnload(cumodule_registry.cu_modules[module_device_id]),
-                0, platform::errors::Fatal("Fail to unload CUmodule name = %s",
-                                           module_device_id));
+                platform::dynload::cuModuleUnload(
+                    cumodule_registry.cumodule_map_[module_device_id]),
+                CUDA_SUCCESS,
+                platform::errors::External("Fail to unload CUmodule!"));
           }
         }
       }
@@ -173,8 +174,7 @@ class CuModuleRegistry {
 };
 
 // Call first time
-static CuModuleRegistry& cumodule_registry_ =
-    CuModuleRegistry::GetCuModuleRegistry();
+static CUmodulePool& cumodule_pool_init = CUmodulePool::GetCUmodulePool();
 }  // namespace nvptx
 
 void NvptxCompiler::Optimize(note::Module*) {}
@@ -187,11 +187,11 @@ void NvptxCompiler::Compile(const note::Module& note_module,
   llvm_module->setDataLayout(llvm::StringRef(GetLlvmDataLayout()));
 
   // convert to ptx
-  auto ptx = ConverToPtx(llvm_module);
+  auto ptx = CompileToPtx(llvm_module);
 
   // registry ptx
-  nvptx::CuModuleRegistry::GetCuModuleRegistry().RegistryCuModule(
-      note_module.name(), ptx);
+  nvptx::CUmodulePool::GetCUmodulePool().InsertCUmodule(note_module.name(),
+                                                        ptx);
 }
 
 std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
@@ -236,7 +236,7 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
       llvm::CodeModel::Medium, codegen_opt_level));
 }
 
-std::string NvptxCompiler::ConverToPtx(llvm::Module* llvm_module) {
+std::string NvptxCompiler::CompileToPtx(llvm::Module* llvm_module) {
   // init context
   static std::once_flag call_once_flag_;
   std::call_once(call_once_flag_, nvptx::InitLlvmNvptxContext);

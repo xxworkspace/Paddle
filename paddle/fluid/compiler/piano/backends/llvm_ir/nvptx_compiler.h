@@ -34,7 +34,7 @@ class NvptxCompiler : public LlvmCompiler {
 
  private:
   std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
-  std::string ConverToPtx(llvm::Module*);
+  std::string CompileToPtx(llvm::Module*);
 
   // TargeTripe for nvidia gpu, see
   // https://llvm.org/docs/NVPTXUsage.html#triples
