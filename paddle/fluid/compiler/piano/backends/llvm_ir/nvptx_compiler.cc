@@ -155,15 +155,14 @@ class CUmodulePool {
    public:
     ~Garbage() noexcept(false) {
       int count = platform::GetCUDADeviceCount();
-      auto& cumodule_registry = GetCUmodulePool();
-      for (auto& p : cumodule_registry.ptx_map_) {
+      auto& cumodule_pool = GetCUmodulePool();
+      for (auto& p : cumodule_pool.ptx_map_) {
         for (int idx = 0; idx < count; ++idx) {
-          platform::SetDeviceId(idx);
           std::string module_device_id = p.first + "_" + std::to_string(idx);
-          if (cumodule_registry.cumodule_map_.count(module_device_id) > 0) {
+          if (cumodule_pool.cumodule_map_.count(module_device_id) > 0) {
             PADDLE_ENFORCE_EQ(
                 platform::dynload::cuModuleUnload(
-                    cumodule_registry.cumodule_map_[module_device_id]),
+                    cumodule_pool.cumodule_map_[module_device_id]),
                 CUDA_SUCCESS,
                 platform::errors::External("Fail to unload CUmodule!"));
           }
@@ -211,7 +210,6 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
   target_options.MCOptions.AsmVerbose = false;
 
   std::string compute_capability = nvptx::GetComputeCapability();
-  std::cerr << compute_capability << std::endl;
 
   llvm::CodeGenOpt::Level codegen_opt_level;
   int optimization_level = 2;

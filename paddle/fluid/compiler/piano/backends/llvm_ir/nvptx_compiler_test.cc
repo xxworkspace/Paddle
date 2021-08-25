@@ -19,14 +19,19 @@
 #include "paddle/fluid/compiler/piano/note/instruction.h"
 #include "paddle/fluid/compiler/piano/note/opcode.h"
 #include "paddle/fluid/compiler/piano/note_builder.h"
+#include "paddle/fluid/platform/gpu_info.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
 TEST(NvptxCompiler, Apply) {
+  // set device
+  platform::SetDeviceId(0);
+
   NoteBuilder note_builder("test_note_builder");
 
+  // build note module
   std::vector<Operand> ops;
   ops.push_back(note_builder.AppendInstruction(note::InstructionProto(),
                                                note::OpCode::kConstant, {}));
@@ -38,8 +43,8 @@ TEST(NvptxCompiler, Apply) {
   auto note_proto = note_builder.Build();
   note::Module note_module(note_proto);
 
+  // compile
   NvptxCompiler nvptx_compiler;
-  // note::Module note_module;
   auto kernel_executable_map = nvptx_compiler.Apply(&note_module);
   //
 }
