@@ -39,6 +39,7 @@ class NvptxCompiler : public LlvmCompiler {
   // TargeTripe for nvidia gpu, see
   // https://llvm.org/docs/NVPTXUsage.html#triples
   std::string GetLlvmTriple() const { return "nvptx64-nvidia-cuda"; }
+
   // DataLayout for nvidia gpu, see
   // https://llvm.org/docs/NVPTXUsage.html#data-layout
   std::string GetLlvmDataLayout() const {

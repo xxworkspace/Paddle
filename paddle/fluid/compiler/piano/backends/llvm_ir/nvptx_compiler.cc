@@ -81,6 +81,9 @@ class CuModuleRegistry {
         ptxs.count(module_name), 0,
         platform::errors::AlreadyExists(
             "note::Module name = %s has be registered!", module_name));
+
+    std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
     ptxs[module_name] = ptx;
   }
 
@@ -169,6 +172,9 @@ class CuModuleRegistry {
   } garbage_;
 };
 
+// Call first time
+static CuModuleRegistry& cumodule_registry_ =
+    CuModuleRegistry::GetCuModuleRegistry();
 }  // namespace nvptx
 
 void NvptxCompiler::Optimize(note::Module*) {}

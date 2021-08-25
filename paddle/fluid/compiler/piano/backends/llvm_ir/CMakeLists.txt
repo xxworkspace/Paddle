@@ -14,8 +14,8 @@ cc_test(nvptx_ir_emitter_test SRCS nvptx_ir_emitter_test.cc
         DEPS nvptx_ir_emitter gpu_ir_emitter ir_emitter)
 target_link_libraries(nvptx_ir_emitter_test ${LLVM_LIBS})
 
-nv_library(llvm_compiler SRCS llvm_compiler.cc DEPS llvm)
-nv_library(nvptx_compiler SRCS nvptx_compiler.cc DEPS llvm)
+nv_library(llvm_compiler SRCS llvm_compiler.cc DEPS nvptx_ir_emitter gpu_ir_emitter ir_emitter llvm)
+nv_library(nvptx_compiler SRCS nvptx_compiler.cc DEPS nvptx_ir_emitter gpu_ir_emitter ir_emitter llvm)
 nv_test(nvptx_compiler_test SRCS nvptx_compiler_test.cc
         DEPS nvptx_compiler llvm_compiler note_ir note_builder)
 target_link_libraries(nvptx_compiler_test ${LLVM_LIBS} -lcuda)

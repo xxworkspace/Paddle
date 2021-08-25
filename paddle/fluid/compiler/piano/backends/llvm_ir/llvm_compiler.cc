@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/llvm_compiler.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
@@ -41,7 +42,21 @@ KernelExecutableMap LlvmCompiler::Apply(note::Module* note_module) {
 
 void LlvmCompiler::ConvertToIr(const note::Module& note_module,
                                llvm::Module* llvm_module,
-                               KernelExecutableMap* kernel_executable_map) {}
+                               KernelExecutableMap* kernel_executable_map) {
+  // ir emitter
+  NvptxIrEmitter nvptx_ir_emitter(llvm_module, kernel_executable_map);
+
+  // get entry function
+  auto& entry_function = note_module.entry_function();
+
+  // get instruction in entry_function
+  auto instructions = entry_function.instructions();
+
+  // generate llvm ir for each instruction
+  for (auto& instr : instructions) {
+    instr.Accept(&nvptx_ir_emitter);
+  }
+}
 
 }  // namespace backends
 }  // namespace piano
