@@ -20,23 +20,27 @@ namespace piano {
 namespace backends {
 
 void NvptxIrEmitter::VisitBatchNormGrad(const note::Instruction& instr) {
-  platform::errors::Unimplemented("BatchNormGrad is unimplemented!");
+  PADDLE_THROW(
+      platform::errors::Unimplemented("BatchNormGrad is unimplemented!"));
 }
 
 void NvptxIrEmitter::VisitBatchNormInference(const note::Instruction& instr) {
-  platform::errors::Unimplemented("BatchNormInference is unimplemented!");
+  PADDLE_THROW(
+      platform::errors::Unimplemented("BatchNormInference is unimplemented!"));
 }
 
 void NvptxIrEmitter::VisitBatchNormTraining(const note::Instruction& instr) {
-  platform::errors::Unimplemented("BatchNormTraining is unimplemented!");
+  PADDLE_THROW(
+      platform::errors::Unimplemented("BatchNormTraining is unimplemented!"));
 }
 
 void NvptxIrEmitter::VisitConvolution(const note::Instruction& instr) {
-  platform::errors::Unimplemented("Convolution is unimplemented!");
+  PADDLE_THROW(
+      platform::errors::Unimplemented("Convolution is unimplemented!"));
 }
 
 void NvptxIrEmitter::VisitDot(const note::Instruction& instr) {
-  platform::errors::Unimplemented("VisitDot is unimplemented!");
+  PADDLE_THROW(platform::errors::Unimplemented("VisitDot is unimplemented!"));
 }
 
 }  // namespace backends
