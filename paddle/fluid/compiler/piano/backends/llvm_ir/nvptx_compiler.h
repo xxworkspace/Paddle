@@ -32,7 +32,7 @@ class NvptxCompiler : public LlvmCompiler {
   void Compile(const note::Module&, llvm::Module*,
                KernelExecutableMap*) override;
 
- private:
+ public:
   std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);
   std::string CompileToPtx(llvm::Module*);
 

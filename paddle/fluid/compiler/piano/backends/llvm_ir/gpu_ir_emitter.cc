@@ -29,6 +29,8 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
   auto lhs_type = instr.operand(0).shape().element_type();
   auto rhs_type = instr.operand(1).shape().element_type();
   auto out_type = instr.shape().element_type();
+  std::cerr << out_type << std::endl;
+
   auto func = CreateLLVMFunction(instr.name(), {lhs_type, rhs_type, out_type},
                                  llvm_module_);
 

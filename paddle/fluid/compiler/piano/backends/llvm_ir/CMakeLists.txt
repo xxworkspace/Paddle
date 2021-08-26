@@ -17,7 +17,7 @@ cc_test(nvptx_ir_emitter_test SRCS nvptx_ir_emitter_test.cc
         DEPS nvptx_ir_emitter note_ir note_proto)
 target_link_libraries(nvptx_ir_emitter_test ${LLVM_LIBS})
 
-cc_library(llvm_compiler SRCS llvm_compiler.cc DEPS nvptx_ir_emitter nvptx_primitive_ir_emitter llvm)
+cc_library(llvm_compiler SRCS llvm_compiler.cc DEPS nvptx_ir_emitter nvptx_primitive_ir_emitter note_ir llvm)
 cc_library(nvptx_compiler SRCS nvptx_compiler.cc DEPS llvm_compiler llvm dynload_cuda)
 nv_test(nvptx_compiler_test SRCS nvptx_compiler_test.cc
         DEPS nvptx_compiler note_ir note_builder)
