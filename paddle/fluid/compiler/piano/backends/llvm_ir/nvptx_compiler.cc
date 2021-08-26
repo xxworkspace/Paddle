@@ -67,11 +67,11 @@ std::string GetComputeCapability() {
   return "sm_" + std::to_string(capability);
 }
 
-class CUmodulePool {
+class CumodulePool {
  public:
-  ~CUmodulePool() {}
-  static CUmodulePool& Instance() {
-    static CUmodulePool cumodule_pool;
+  ~CumodulePool() {}
+  static CumodulePool& Instance() {
+    static CumodulePool cumodule_pool;
     return cumodule_pool;
   }
 
@@ -87,7 +87,7 @@ class CUmodulePool {
   }
 
   // get a CUfunction from primary context in device_id.
-  CUfunction GetCUfunction(const std::string& module_name,
+  CUfunction GetCufunction(const std::string& module_name,
                            const std::string& func_name) {
     PADDLE_ENFORCE_EQ(ptx_map_.count(module_name), 1,
                       platform::errors::Unavailable(
@@ -129,8 +129,8 @@ class CUmodulePool {
   }
 
  private:
-  CUmodulePool() {}
-  DISABLE_COPY_AND_ASSIGN(CUmodulePool);
+  CumodulePool() {}
+  DISABLE_COPY_AND_ASSIGN(CumodulePool);
   // CUmodule map for each module and ptx.
   std::mutex mutex_;
   // KEY = module name + "_" + std::to_string(device_id).
@@ -158,14 +158,13 @@ class CUmodulePool {
 };
 
 // Call first time
-static CUmodulePool& cumodule_pool_init = CUmodulePool::Instance();
+static CumodulePool& cumodule_pool_init = CumodulePool::Instance();
 }  // namespace nvptx
 
 void NvptxCompiler::Optimize(note::Module*) {}
 
 void NvptxCompiler::Compile(const note::Module& note_module,
-                            llvm::Module* llvm_module,
-                            KernelExecutableMap* kernel_executable_map) {
+                            llvm::Module* llvm_module) {
   // set triple and datalayout
   llvm_module->setTargetTriple(llvm::StringRef(GetLlvmTriple()));
   llvm_module->setDataLayout(llvm::StringRef(GetLlvmDataLayout()));
@@ -174,7 +173,7 @@ void NvptxCompiler::Compile(const note::Module& note_module,
   auto ptx = CompileToPtx(llvm_module);
 
   // registry ptx
-  nvptx::CUmodulePool::Instance().Insert(note_module.name(), ptx);
+  nvptx::CumodulePool::Instance().Insert(note_module.name(), ptx);
 }
 
 std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(

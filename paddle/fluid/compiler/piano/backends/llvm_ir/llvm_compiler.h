@@ -42,8 +42,7 @@ class LlvmCompiler : public Compiler {
 
   // use llvm ir pass to optimize the llvm::Module and comile llvm::module to
   // executable binary code on tareget device.
-  virtual void Compile(const note::Module&, llvm::Module*,
-                       KernelExecutableMap*) = 0;
+  virtual void Compile(const note::Module&, llvm::Module*) = 0;
 };
 
 }  // namespace backends

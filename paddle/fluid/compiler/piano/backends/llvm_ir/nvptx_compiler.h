@@ -29,8 +29,7 @@ class NvptxCompiler : public LlvmCompiler {
 
  protected:
   void Optimize(note::Module*) override;
-  void Compile(const note::Module&, llvm::Module*,
-               KernelExecutableMap*) override;
+  void Compile(const note::Module&, llvm::Module*) override;
 
  public:
   std::unique_ptr<llvm::TargetMachine> GetTargetMachine(llvm::Triple);

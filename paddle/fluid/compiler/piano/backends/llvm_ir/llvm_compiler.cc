@@ -34,7 +34,7 @@ KernelExecutableMap LlvmCompiler::Apply(note::Module* note_module) {
   ConvertToIr(*note_module, &llvm_module, &kernel_executable_map);
 
   // compiler llvm ir to lowring ir
-  Compile(*note_module, &llvm_module, &kernel_executable_map);
+  Compile(*note_module, &llvm_module);
 
   return kernel_executable_map;
 }
