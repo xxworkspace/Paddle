@@ -83,58 +83,57 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
 
 // Scalar op
 void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Constant is unimplemented!"));
+  platform::errors::Unimplemented("Constant is unimplemented!");
 }
 
 // Unary
 void GpuIrEmitter::VisitBroadcast(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Broadcast is unimplemented!"));
+  platform::errors::Unimplemented("Broadcast is unimplemented!");
 }
 
 void GpuIrEmitter::VisitCopy(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Copy is unimplemented!"));
+  platform::errors::Unimplemented("Copy is unimplemented!");
 }
 
 void GpuIrEmitter::VisitReshape(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Reshape is unimplemented!"));
+  platform::errors::Unimplemented("Reshape is unimplemented!");
 }
 
 void GpuIrEmitter::VisitReverse(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Reverse is unimplemented!"));
+  platform::errors::Unimplemented("Reverse is unimplemented!");
 }
 
 void GpuIrEmitter::VisitSlice(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Slice is unimplemented!"));
+  platform::errors::Unimplemented("Slice is unimplemented!");
 }
 
 void GpuIrEmitter::VisitTranspose(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Transpose is unimplemented!"));
+  platform::errors::Unimplemented("Transpose is unimplemented!");
 }
 
 // Other
 void GpuIrEmitter::VisitSelect(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Select is unimplemented!"));
+  platform::errors::Unimplemented("Select is unimplemented!");
 }
 
 void GpuIrEmitter::VisitConcatenate(const note::Instruction& instr) {
-  PADDLE_THROW(
-      platform::errors::Unimplemented("Concatenate is unimplemented!"));
+  platform::errors::Unimplemented("Concatenate is unimplemented!");
 }
 
 void GpuIrEmitter::VisitReduce(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Reduce is unimplemented!"));
+  platform::errors::Unimplemented("Reduce is unimplemented!");
 }
 
 void GpuIrEmitter::VisitRng(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Rng is unimplemented!"));
+  platform::errors::Unimplemented("Rng is unimplemented!");
 }
 
 void GpuIrEmitter::VisitSort(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Sort is unimplemented!"));
+  platform::errors::Unimplemented("Sort is unimplemented!");
 }
 
 void GpuIrEmitter::VisitTuple(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Tuple is unimplemented!"));
+  platform::errors::Unimplemented("Tuple is unimplemented!");
 }
 
 }  // namespace backends
