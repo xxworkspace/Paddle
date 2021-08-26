@@ -70,20 +70,19 @@ std::string GetComputeCapability() {
 class CUmodulePool {
  public:
   ~CUmodulePool() {}
-  static CUmodulePool& GetCUmodulePool() {
+  static CUmodulePool& Instance() {
     static CUmodulePool cumodule_pool;
     return cumodule_pool;
   }
 
   // registry ptx with note::Module's name
-  void InsertCUmodule(const std::string& module_name, const std::string& ptx) {
+  void Insert(const std::string& module_name, const std::string& ptx) {
     PADDLE_ENFORCE_EQ(
         ptx_map_.count(module_name), 0,
         platform::errors::AlreadyExists(
             "note::Module name = %s has be inserted!", module_name));
 
-    std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::mutex> lock(mutex_);
     ptx_map_[module_name] = ptx;
   }
 
@@ -101,43 +100,31 @@ class CUmodulePool {
     if (cumodule_map_.count(module_device_id) == 0) {
       // As CUmodule is not loaded on current primary context, so load CUmodule
       // first.
-      std::mutex mtx;
-      std::lock_guard<std::mutex> lock(mtx);
+      std::lock_guard<std::mutex> lock(mutex_);
       {
         if (cumodule_map_.count(module_device_id) == 0) {
           CUdevice device;
           CUcontext context;
           // get current CUdevice.
-          PADDLE_ENFORCE_EQ(
-              platform::dynload::cuDeviceGet(&device, device_id), CUDA_SUCCESS,
-              platform::errors::External(
-                  "Fail to get CUdevice width device id = %d !", device_id));
+          PADDLE_ENFORCE_CUDA_SUCCESS(
+              platform::dynload::cuDeviceGet(&device, device_id));
           // get current primary CUcontext.
-          PADDLE_ENFORCE_EQ(
-              platform::dynload::cuCtxGetCurrent(&context), CUDA_SUCCESS,
-              platform::errors::External("Fail to get CUcontext!"));
+          PADDLE_ENFORCE_CUDA_SUCCESS(
+              platform::dynload::cuCtxGetCurrent(&context));
           // retain primary context for driver api to use.
-          PADDLE_ENFORCE_EQ(
-              platform::dynload::cuDevicePrimaryCtxRetain(&context, device),
-              CUDA_SUCCESS,
-              platform::errors::External("Fail to retain CUcontext!"));
+          PADDLE_ENFORCE_CUDA_SUCCESS(
+              platform::dynload::cuDevicePrimaryCtxRetain(&context, device));
           // load CUmodule from ptx.
-          PADDLE_ENFORCE_EQ(platform::dynload::cuModuleLoadData(
-                                &cumodule_map_[module_device_id],
-                                ptx_map_[module_name].c_str()),
-                            CUDA_SUCCESS, platform::errors::External(
-                                              "Fail to load CUmodule!"));
+          PADDLE_ENFORCE_CUDA_SUCCESS(platform::dynload::cuModuleLoadData(
+              &cumodule_map_[module_device_id], ptx_map_[module_name].c_str()));
         }
       }
     }
 
     // As CUmodule is loaded, using function name to retrival the CUfuction.
     CUfunction cu_func;
-    PADDLE_ENFORCE_EQ(
-        platform::dynload::cuModuleGetFunction(
-            &cu_func, cumodule_map_[module_device_id], func_name.c_str()),
-        CUDA_SUCCESS,
-        platform::errors::External("Fail to get CUfunction = %s !", func_name));
+    PADDLE_ENFORCE_CUDA_SUCCESS(platform::dynload::cuModuleGetFunction(
+        &cu_func, cumodule_map_[module_device_id], func_name.c_str()));
     return cu_func;
   }
 
@@ -145,35 +132,33 @@ class CUmodulePool {
   CUmodulePool() {}
   DISABLE_COPY_AND_ASSIGN(CUmodulePool);
   // CUmodule map for each module and ptx.
+  std::mutex mutex_;
   // KEY = module name + "_" + std::to_string(device_id).
   std::unordered_map<std::string, CUmodule> cumodule_map_;
   // ptx map for each module.
   std::unordered_map<std::string, std::string> ptx_map_;
 
   // free CUmodule.
-  class Garbage {
+  class Deleter {
    public:
-    ~Garbage() noexcept(false) {
+    ~Deleter() noexcept(false) {
       int count = platform::GetCUDADeviceCount();
-      auto& cumodule_pool = GetCUmodulePool();
+      auto& cumodule_pool = Instance();
       for (auto& p : cumodule_pool.ptx_map_) {
         for (int idx = 0; idx < count; ++idx) {
           std::string module_device_id = p.first + "_" + std::to_string(idx);
           if (cumodule_pool.cumodule_map_.count(module_device_id) > 0) {
-            PADDLE_ENFORCE_EQ(
-                platform::dynload::cuModuleUnload(
-                    cumodule_pool.cumodule_map_[module_device_id]),
-                CUDA_SUCCESS,
-                platform::errors::External("Fail to unload CUmodule!"));
+            PADDLE_ENFORCE_CUDA_SUCCESS(platform::dynload::cuModuleUnload(
+                cumodule_pool.cumodule_map_[module_device_id]));
           }
         }
       }
     }
-  } garbage_;
+  } deleter_;
 };
 
 // Call first time
-static CUmodulePool& cumodule_pool_init = CUmodulePool::GetCUmodulePool();
+static CUmodulePool& cumodule_pool_init = CUmodulePool::Instance();
 }  // namespace nvptx
 
 void NvptxCompiler::Optimize(note::Module*) {}
@@ -189,8 +174,7 @@ void NvptxCompiler::Compile(const note::Module& note_module,
   auto ptx = CompileToPtx(llvm_module);
 
   // registry ptx
-  nvptx::CUmodulePool::GetCUmodulePool().InsertCUmodule(note_module.name(),
-                                                        ptx);
+  nvptx::CUmodulePool::Instance().Insert(note_module.name(), ptx);
 }
 
 std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
@@ -211,21 +195,8 @@ std::unique_ptr<llvm::TargetMachine> NvptxCompiler::GetTargetMachine(
 
   std::string compute_capability = nvptx::GetComputeCapability();
 
-  llvm::CodeGenOpt::Level codegen_opt_level;
-  int optimization_level = 2;
-  switch (optimization_level) {
-    case 1:
-      codegen_opt_level = llvm::CodeGenOpt::Less;
-      break;
-    case 2:
-      codegen_opt_level = llvm::CodeGenOpt::Default;
-      break;
-    case 3:
-      codegen_opt_level = llvm::CodeGenOpt::Aggressive;
-      break;
-    default:
-      codegen_opt_level = llvm::CodeGenOpt::None;
-  }
+  // codegen opt level : llvm::CodeGenOpt::Less/Default/Aggressive/None
+  llvm::CodeGenOpt::Level codegen_opt_level = llvm::CodeGenOpt::Default;
 
   // triple mcpu mattr opt
   return std::unique_ptr<llvm::TargetMachine>(target->createTargetMachine(
