@@ -16,6 +16,7 @@
 #include "llvm/IR/Module.h"
 #include "paddle/fluid/compiler/piano/backends/kernel_executable.h"
 #include "paddle/fluid/compiler/piano/backends/note_visitor_base.h"
+#include "paddle/fluid/compiler/piano/note/instruction.h"
 
 namespace paddle {
 namespace piano {
@@ -33,7 +34,7 @@ namespace backends {
 // Each time VisitXXX will translate one note::Instruction with type OpCode::XXX
 // into a kernel with llvm IR.
 
-class IrEmitter : public NoteVisitorBase {
+class IrEmitter : public NoteVisitorBase<const note::Instruction&> {
  public:
   IrEmitter(llvm::Module* llvm_module,
             KernelExecutableMap* kernel_executable_map)
@@ -48,6 +49,7 @@ class IrEmitter : public NoteVisitorBase {
 
   // Scalar op
   virtual void VisitConstant(const note::Instruction&) = 0;
+  virtual void VisitParameter(const note::Instruction&) = 0;
 
   // ops can be replaced by library
   virtual void VisitBatchNormGrad(const note::Instruction&) = 0;

@@ -86,6 +86,10 @@ void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Constant is unimplemented!"));
 }
 
+void GpuIrEmitter::VisitParameter(const note::Instruction& instr) {
+  PADDLE_THROW(platform::errors::Unimplemented("Parameter is unimplemented!"));
+}
+
 // Unary
 void GpuIrEmitter::VisitBroadcast(const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Broadcast is unimplemented!"));

@@ -50,7 +50,9 @@ class Instruction {
 
   std::string ToString() const;
 
-  void Accept(backends::NoteVisitorBase *visitor) const;
+  void Accept(backends::NoteVisitorBase<const Instruction &> *visitor) const;
+
+  void Accept(backends::NoteVisitorBase<Instruction *> *visitor);
 
   // return the name of this instruction
   const std::string &name() const { return name_; }
