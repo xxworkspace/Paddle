@@ -16,63 +16,59 @@
 
 namespace paddle {
 namespace piano {
-
-namespace note {
-class Instruction;
-}  // namespace note
-
 namespace backends {
 
+template <typename InstructionType>
 class NoteVisitorBase {
  public:
   virtual ~NoteVisitorBase() {}
 
   // Scalar op
-  virtual void VisitConstant(const note::Instruction&) = 0;
+  virtual void VisitConstant(InstructionType) = 0;
   // TODO(sunli): use the pure virtual function instead
-  virtual void VisitParameter(const note::Instruction&) {}
+  virtual void VisitParameter(InstructionType) = 0;
 
   // ops can be replaced by library
-  virtual void VisitBatchNormGrad(const note::Instruction&) = 0;
-  virtual void VisitBatchNormInference(const note::Instruction&) = 0;
-  virtual void VisitBatchNormTraining(const note::Instruction&) = 0;
-  virtual void VisitConvolution(const note::Instruction&) = 0;
-  virtual void VisitDot(const note::Instruction&) = 0;
+  virtual void VisitBatchNormGrad(InstructionType) = 0;
+  virtual void VisitBatchNormInference(InstructionType) = 0;
+  virtual void VisitBatchNormTraining(InstructionType) = 0;
+  virtual void VisitConvolution(InstructionType) = 0;
+  virtual void VisitDot(InstructionType) = 0;
 
   // Unary
-  virtual void VisitBroadcast(const note::Instruction&) = 0;
-  virtual void VisitCast(const note::Instruction&) = 0;
-  virtual void VisitCopy(const note::Instruction&) = 0;
-  virtual void VisitExp(const note::Instruction&) = 0;
-  virtual void VisitLog(const note::Instruction&) = 0;
-  virtual void VisitNegative(const note::Instruction&) = 0;
-  virtual void VisitNot(const note::Instruction&) = 0;
-  virtual void VisitReshape(const note::Instruction&) = 0;
-  virtual void VisitReverse(const note::Instruction&) = 0;
-  virtual void VisitRsqrt(const note::Instruction&) = 0;
-  virtual void VisitSlice(const note::Instruction&) = 0;
-  virtual void VisitSqrt(const note::Instruction&) = 0;
-  virtual void VisitTranspose(const note::Instruction&) = 0;
+  virtual void VisitBroadcast(InstructionType) = 0;
+  virtual void VisitCast(InstructionType) = 0;
+  virtual void VisitCopy(InstructionType) = 0;
+  virtual void VisitExp(InstructionType) = 0;
+  virtual void VisitLog(InstructionType) = 0;
+  virtual void VisitNegative(InstructionType) = 0;
+  virtual void VisitNot(InstructionType) = 0;
+  virtual void VisitReshape(InstructionType) = 0;
+  virtual void VisitReverse(InstructionType) = 0;
+  virtual void VisitRsqrt(InstructionType) = 0;
+  virtual void VisitSlice(InstructionType) = 0;
+  virtual void VisitSqrt(InstructionType) = 0;
+  virtual void VisitTranspose(InstructionType) = 0;
 
   // Binary
-  virtual void VisitAdd(const note::Instruction&) = 0;
-  virtual void VisitAnd(const note::Instruction&) = 0;
-  virtual void VisitCompare(const note::Instruction&) = 0;
-  virtual void VisitDivide(const note::Instruction&) = 0;
-  virtual void VisitMaximum(const note::Instruction&) = 0;
-  virtual void VisitMinimum(const note::Instruction&) = 0;
-  virtual void VisitMultiply(const note::Instruction&) = 0;
-  virtual void VisitOr(const note::Instruction&) = 0;
-  virtual void VisitSubtract(const note::Instruction&) = 0;
-  virtual void VisitXor(const note::Instruction&) = 0;
+  virtual void VisitAdd(InstructionType) = 0;
+  virtual void VisitAnd(InstructionType) = 0;
+  virtual void VisitCompare(InstructionType) = 0;
+  virtual void VisitDivide(InstructionType) = 0;
+  virtual void VisitMaximum(InstructionType) = 0;
+  virtual void VisitMinimum(InstructionType) = 0;
+  virtual void VisitMultiply(InstructionType) = 0;
+  virtual void VisitOr(InstructionType) = 0;
+  virtual void VisitSubtract(InstructionType) = 0;
+  virtual void VisitXor(InstructionType) = 0;
 
   // other
-  virtual void VisitSelect(const note::Instruction&) = 0;
-  virtual void VisitConcatenate(const note::Instruction&) = 0;
-  virtual void VisitReduce(const note::Instruction&) = 0;
-  virtual void VisitRng(const note::Instruction&) = 0;
-  virtual void VisitSort(const note::Instruction&) = 0;
-  virtual void VisitTuple(const note::Instruction&) = 0;
+  virtual void VisitSelect(InstructionType) = 0;
+  virtual void VisitConcatenate(InstructionType) = 0;
+  virtual void VisitReduce(InstructionType) = 0;
+  virtual void VisitRng(InstructionType) = 0;
+  virtual void VisitSort(InstructionType) = 0;
+  virtual void VisitTuple(InstructionType) = 0;
 };
 
 }  // namespace backends

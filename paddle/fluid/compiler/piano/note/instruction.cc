@@ -161,11 +161,26 @@ std::string Instruction::ToString() const {
       string::join_strings(attr_strs, ", ").c_str());
 }
 
-void Instruction::Accept(backends::NoteVisitorBase* visitor) const {
+void Instruction::Accept(
+    backends::NoteVisitorBase<const Instruction&>* visitor) const {
   switch (opcode_) {
 #define HANDLE_VISIT(enum_id, op_name, ...) \
   case OpCode::k##enum_id:                  \
     return visitor->Visit##enum_id(*this);
+    OPCODE_HANDLER(HANDLE_VISIT)
+#undef HANDLE_VISIT
+    default:
+      PADDLE_THROW(
+          platform::errors::NotFound("Invalid operator code (opcode = %u) !",
+                                     static_cast<std::uint32_t>(opcode_)));
+  }
+}
+
+void Instruction::Accept(backends::NoteVisitorBase<Instruction*>* visitor) {
+  switch (opcode_) {
+#define HANDLE_VISIT(enum_id, op_name, ...) \
+  case OpCode::k##enum_id:                  \
+    return visitor->Visit##enum_id(this);
     OPCODE_HANDLER(HANDLE_VISIT)
 #undef HANDLE_VISIT
     default:

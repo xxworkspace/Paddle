@@ -36,6 +36,8 @@ class GpuIrEmitter : public IrEmitter {
 
   // Scalar op
   void VisitConstant(const note::Instruction&) override;
+  // Parameter op
+  void VisitParameter(const note::Instruction&) override;
 
   // ops can be replaced by library
   virtual void VisitBatchNormGrad(const note::Instruction&) = 0;

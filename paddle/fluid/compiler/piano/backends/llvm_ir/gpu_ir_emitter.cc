@@ -83,6 +83,8 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
 
 // Scalar op
 void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {}
+// Parameter
+void GpuIrEmitter::VisitParameter(const note::Instruction& instr) {}
 
 // Unary
 void GpuIrEmitter::VisitBroadcast(const note::Instruction& instr) {}
