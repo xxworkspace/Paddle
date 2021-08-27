@@ -75,7 +75,7 @@ std::string GetComputeCapability() {
 
 class CumodulePool {
  public:
-  ~CumodulePool() {
+  ~CumodulePool() noexcept(false) {
     int count = platform::GetCUDADeviceCount();
     auto& cumodule_pool = Instance();
     for (auto& p : cumodule_pool.ptx_map_) {
