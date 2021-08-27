@@ -67,6 +67,13 @@ std::string GetComputeCapability() {
   return "sm_" + std::to_string(capability);
 }
 
+#define CHECK_CUDA_DRIVER_SUCCESS(curesult)                                \
+  if (curesult != CUDA_SUCCESS) {                                          \
+    const char* msg;                                                       \
+    platform::dynload::cuGetErrorString(curesult, &msg);                   \
+    PADDLE_THROW(platform::errors::External("cu driver error : %s", msg)); \
+  }
+
 class CumodulePool {
  public:
   ~CumodulePool() {}
@@ -106,16 +113,16 @@ class CumodulePool {
           CUdevice device;
           CUcontext context;
           // get current CUdevice.
-          PADDLE_ENFORCE_CUDA_SUCCESS(
+          CHECK_CUDA_DRIVER_SUCCESS(
               platform::dynload::cuDeviceGet(&device, device_id));
           // get current primary CUcontext.
-          PADDLE_ENFORCE_CUDA_SUCCESS(
+          CHECK_CUDA_DRIVER_SUCCESS(
               platform::dynload::cuCtxGetCurrent(&context));
           // retain primary context for driver api to use.
-          PADDLE_ENFORCE_CUDA_SUCCESS(
+          CHECK_CUDA_DRIVER_SUCCESS(
               platform::dynload::cuDevicePrimaryCtxRetain(&context, device));
           // load CUmodule from ptx.
-          PADDLE_ENFORCE_CUDA_SUCCESS(platform::dynload::cuModuleLoadData(
+          CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuModuleLoadData(
               &cumodule_map_[module_device_id], ptx_map_[module_name].c_str()));
         }
       }
@@ -123,7 +130,7 @@ class CumodulePool {
 
     // As CUmodule is loaded, using function name to retrival the CUfuction.
     CUfunction cu_func;
-    PADDLE_ENFORCE_CUDA_SUCCESS(platform::dynload::cuModuleGetFunction(
+    CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuModuleGetFunction(
         &cu_func, cumodule_map_[module_device_id], func_name.c_str()));
     return cu_func;
   }
@@ -148,7 +155,7 @@ class CumodulePool {
         for (int idx = 0; idx < count; ++idx) {
           std::string module_device_id = p.first + "_" + std::to_string(idx);
           if (cumodule_pool.cumodule_map_.count(module_device_id) > 0) {
-            PADDLE_ENFORCE_CUDA_SUCCESS(platform::dynload::cuModuleUnload(
+            CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuModuleUnload(
                 cumodule_pool.cumodule_map_[module_device_id]));
           }
         }
