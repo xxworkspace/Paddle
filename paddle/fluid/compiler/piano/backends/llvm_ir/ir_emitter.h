@@ -36,9 +36,8 @@ namespace backends {
 
 class IrEmitter : public NoteVisitorBase<const note::Instruction&> {
  public:
-  IrEmitter() = delete;
-  explicit IrEmitter(llvm::Module* llvm_module,
-                     KernelExecutableMap* kernel_executable_map)
+  IrEmitter(llvm::Module* llvm_module,
+            KernelExecutableMap* kernel_executable_map)
       : llvm_module_(llvm_module),
         kernel_executable_map_(kernel_executable_map) {}
   virtual ~IrEmitter() {}
