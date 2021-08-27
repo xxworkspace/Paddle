@@ -87,7 +87,7 @@ void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Constant is unimplemented!"));
 }
 
-void VisitParameter(const note::Instruction& instr) {
+void GpuIrEmitter::VisitParameter(const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Parameter( is unimplemented!"));
 }
 
