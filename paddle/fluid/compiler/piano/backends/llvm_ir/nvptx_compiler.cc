@@ -225,7 +225,9 @@ std::string NvptxCompiler::CompileToPtx(llvm::Module* llvm_module) {
   target_machine->addPassesToEmitFile(pass_manager, out_stream, nullptr,
                                       llvm::CGFT_AssemblyFile);
   // run pass
+  // TODO(sunli) : coredump catch!
   pass_manager.run(*llvm_module);
+
   return ptx;
 }
 

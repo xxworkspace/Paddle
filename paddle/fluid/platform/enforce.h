@@ -857,7 +857,8 @@ inline std::string build_nvidia_error_msg(CUresult e) {
   std::ostringstream sout;
   const char* msg;
   platform::dynload::cuGetErrorString(e, &msg);
-  sout << "CU error(" << e << "), " << msg << ". " << GetExternalErrorMsg(e);
+  sout << "CUDA driver api error(" << e << "), " << msg << ". "
+       << GetExternalErrorMsg(e);
   return sout.str();
 }
 
