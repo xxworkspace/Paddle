@@ -23,6 +23,7 @@ limitations under the License. */
 #include "paddle/fluid/compiler/piano/note/function.h"
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
 #include "paddle/fluid/compiler/piano/note/opcode.h"
+#include "paddle/fluid/compiler/piano/note/populate_attribute_value.h"
 #include "paddle/fluid/compiler/piano/note/type_traits.h"
 #include "paddle/fluid/platform/variant.h"
 #include "paddle/fluid/string/string_helper.h"
@@ -30,6 +31,24 @@ limitations under the License. */
 namespace paddle {
 namespace piano {
 namespace note {
+
+namespace {
+struct AttrProtoSetter {
+  AttrProtoSetter(const Instruction& instr, const std::string& attr_name,
+                  AttrValueProto* proto)
+      : instr_(instr), attr_name_(attr_name), proto_(proto) {}
+
+  template <typename T>
+  void apply() {
+    PopulateAttrValueProto<T>(instr_.GetAttr<T>(attr_name_), proto_);
+  }
+
+ private:
+  const Instruction& instr_;
+  const std::string& attr_name_;
+  AttrValueProto* proto_;
+};
+}  // namespace
 
 Instruction::Instruction(
     const InstructionProto& proto,
@@ -179,78 +198,8 @@ AttrValueProto Instruction::GetAttrProto(const std::string& attr_name) const {
   AttrValueProto val_proto;
   auto value_type =
       static_cast<AttrValueProto::ValueCase>(attrs_.at(attr_name).which());
-  switch (value_type) {
-    case AttrValueProto::ValueCase::kS: {
-      val_proto.set_s(GetAttr<std::string>(attr_name));
-      break;
-    }
-    case AttrValueProto::ValueCase::kB: {
-      val_proto.set_b(GetAttr<bool>(attr_name));
-      break;
-    }
-    case AttrValueProto::ValueCase::kI: {
-      val_proto.set_i(GetAttr<std::int32_t>(attr_name));
-      break;
-    }
-    case AttrValueProto::ValueCase::kL: {
-      val_proto.set_l(GetAttr<std::int64_t>(attr_name));
-      break;
-    }
-    case AttrValueProto::ValueCase::kF: {
-      val_proto.set_f(GetAttr<float>(attr_name));
-      break;
-    }
-    case AttrValueProto::ValueCase::kD: {
-      val_proto.set_d(GetAttr<double>(attr_name));
-      break;
-    }
-    case AttrValueProto::ValueCase::kStrings: {
-      auto val = GetAttr<std::vector<std::string>>(attr_name);
-      auto* strings = val_proto.mutable_strings()->mutable_value();
-      std::for_each(val.cbegin(), val.cend(),
-                    [&strings](const std::string& s) { *strings->Add() = s; });
-      break;
-    }
-    case AttrValueProto::ValueCase::kBools: {
-      auto val = GetAttr<std::vector<bool>>(attr_name);
-      auto* bools = val_proto.mutable_bools()->mutable_value();
-      bools->Resize(val.size(), false);
-      std::copy(val.cbegin(), val.cend(), bools->begin());
-      break;
-    }
-    case AttrValueProto::ValueCase::kInts: {
-      auto val = GetAttr<std::vector<std::int32_t>>(attr_name);
-      auto* ints = val_proto.mutable_ints()->mutable_value();
-      ints->Resize(val.size(), 0);
-      std::copy(val.cbegin(), val.cend(), ints->begin());
-      break;
-    }
-    case AttrValueProto::ValueCase::kLongs: {
-      auto val = GetAttr<std::vector<std::int64_t>>(attr_name);
-      auto* longs = val_proto.mutable_longs()->mutable_value();
-      longs->Resize(val.size(), 0);
-      std::copy(val.cbegin(), val.cend(), longs->begin());
-      break;
-    }
-    case AttrValueProto::ValueCase::kFloats: {
-      auto val = GetAttr<std::vector<float>>(attr_name);
-      auto* floats = val_proto.mutable_floats()->mutable_value();
-      floats->Resize(val.size(), 0);
-      std::copy(val.cbegin(), val.cend(), floats->begin());
-      break;
-    }
-    case AttrValueProto::ValueCase::kDoubles: {
-      auto val = GetAttr<std::vector<double>>(attr_name);
-      auto* doubles = val_proto.mutable_doubles()->mutable_value();
-      doubles->Resize(val.size(), 0);
-      std::copy(val.cbegin(), val.cend(), doubles->begin());
-      break;
-    }
-    default:
-      PADDLE_THROW(platform::errors::Unavailable("Invalid attribute type %d.",
-                                                 value_type));
-  }
-
+  AttrProtoSetter setter{*this, attr_name, &val_proto};
+  VisitAttrType(value_type, setter);
   return val_proto;
 }
 
