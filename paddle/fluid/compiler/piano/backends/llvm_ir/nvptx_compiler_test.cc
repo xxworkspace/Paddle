@@ -15,14 +15,9 @@
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_compiler.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsNVPTX.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/Support/Host.h"
 #include "paddle/fluid/compiler/piano/note/instruction.h"
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
 #include "paddle/fluid/compiler/piano/note/opcode.h"
@@ -92,7 +87,6 @@ TEST(NvptxCompiler, CompileToPtx) {
     entry_builder.CreateRetVoid();
   }
   llvm_module.print(llvm::errs(), nullptr);
-  // log ptx
   LOG(INFO) << test_compiler.CallCompileToPtx(&llvm_module);
 }
 
@@ -138,7 +132,8 @@ TEST(NvptxCompiler, Apply) {
 
   // compile
   NvptxCompiler nvptx_compiler;
-  auto kernel_executable_map = nvptx_compiler.Apply(&note_module);
+  // To removet 'EXPECT_THROW' in future commit
+  EXPECT_THROW(nvptx_compiler.Apply(&note_module), platform::EnforceNotMet);
 }
 
 }  // namespace backends

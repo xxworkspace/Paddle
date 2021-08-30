@@ -84,8 +84,11 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
 
 // Scalar op
 void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
-  // TODO(sunli) : Add implement!
-  platform::errors::Unimplemented("Constant is unimplemented!");
+  PADDLE_THROW(platform::errors::Unimplemented("Constant is unimplemented!"));
+}
+
+void GpuIrEmitter::VisitParameter(const note::Instruction& instr) {
+  PADDLE_THROW(platform::errors::Unimplemented("Parameter( is unimplemented!"));
 }
 
 // Unary

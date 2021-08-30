@@ -17,12 +17,13 @@
 #include "llvm/IR/Module.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/primitive_ir_generator.h"
 #include "paddle/fluid/compiler/piano/backends/note_visitor_base.h"
+#include "paddle/fluid/compiler/piano/note/instruction.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
-class PrimitiveIrEmitter : public NoteVisitorBase {
+class PrimitiveIrEmitter : public NoteVisitorBase<const note::Instruction&> {
  public:
   PrimitiveIrEmitter(llvm::LLVMContext* ctx, llvm::Function* func)
       : ctx_(ctx), func_(func) {}
@@ -33,6 +34,8 @@ class PrimitiveIrEmitter : public NoteVisitorBase {
 
   // Scalar op
   virtual void VisitConstant(const note::Instruction&) = 0;
+  // Parameter
+  void VisitParameter(const note::Instruction&) override{};
 
   // ops can be replaced by library
   void VisitBatchNormGrad(const note::Instruction&) override{};

@@ -13,8 +13,6 @@
 // limitations under the License.
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_compiler.h"
-#include <cuda.h>
-#include <cuda_runtime.h>
 #include <mutex>
 #include <unordered_map>
 #include "llvm/ADT/StringRef.h"
@@ -37,6 +35,14 @@ namespace piano {
 namespace backends {
 
 namespace nvptx {
+
+// To be removed in future commit by using PADDLE_ENFORCE_CUDA_SUCCESS.
+#define CHECK_CUDA_DRIVER_SUCCESS(curesult)                                \
+  if (curesult != CUDA_SUCCESS) {                                          \
+    const char* msg;                                                       \
+    platform::dynload::cuGetErrorString(curesult, &msg);                   \
+    PADDLE_THROW(platform::errors::External("cu driver error : %s", msg)); \
+  }
 
 void InitLlvmNvptxContext() {
   // init target
@@ -67,16 +73,22 @@ std::string GetComputeCapability() {
   return "sm_" + std::to_string(capability);
 }
 
-#define CHECK_CUDA_DRIVER_SUCCESS(curesult)                                \
-  if (curesult != CUDA_SUCCESS) {                                          \
-    const char* msg;                                                       \
-    platform::dynload::cuGetErrorString(curesult, &msg);                   \
-    PADDLE_THROW(platform::errors::External("cu driver error : %s", msg)); \
-  }
-
 class CumodulePool {
  public:
-  ~CumodulePool() {}
+  ~CumodulePool() noexcept(false) {
+    int count = platform::GetCUDADeviceCount();
+    auto& cumodule_pool = Instance();
+    for (auto& p : cumodule_pool.ptx_map_) {
+      for (int idx = 0; idx < count; ++idx) {
+        std::string module_device_id = p.first + "_" + std::to_string(idx);
+        if (cumodule_pool.cumodule_map_.count(module_device_id) > 0) {
+          CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuModuleUnload(
+              cumodule_pool.cumodule_map_[module_device_id]));
+        }
+      }
+    }
+  }
+
   static CumodulePool& Instance() {
     static CumodulePool cumodule_pool;
     return cumodule_pool;
@@ -94,14 +106,13 @@ class CumodulePool {
   }
 
   // get a CUfunction from primary context in device_id.
-  CUfunction GetCufunction(const std::string& module_name,
+  CUfunction GetCuFunction(const std::string& module_name,
                            const std::string& func_name) {
     PADDLE_ENFORCE_EQ(ptx_map_.count(module_name), 1,
                       platform::errors::Unavailable(
                           "note::Module name = %s is not found!", module_name));
     // get current device id.
     int device_id = platform::GetCurrentDeviceId();
-    // module_name + "_" + str(device_id)
     std::string module_device_id =
         module_name + "_" + std::to_string(device_id);
     if (cumodule_map_.count(module_device_id) == 0) {
@@ -136,8 +147,8 @@ class CumodulePool {
   }
 
  private:
-  CumodulePool() {}
-  DISABLE_COPY_AND_ASSIGN(CumodulePool);
+  CumodulePool() = default;
+
   // CUmodule map for each module and ptx.
   std::mutex mutex_;
   // KEY = module name + "_" + std::to_string(device_id).
@@ -145,30 +156,16 @@ class CumodulePool {
   // ptx map for each module.
   std::unordered_map<std::string, std::string> ptx_map_;
 
-  // free CUmodule.
-  class Deleter {
-   public:
-    ~Deleter() noexcept(false) {
-      int count = platform::GetCUDADeviceCount();
-      auto& cumodule_pool = Instance();
-      for (auto& p : cumodule_pool.ptx_map_) {
-        for (int idx = 0; idx < count; ++idx) {
-          std::string module_device_id = p.first + "_" + std::to_string(idx);
-          if (cumodule_pool.cumodule_map_.count(module_device_id) > 0) {
-            CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuModuleUnload(
-                cumodule_pool.cumodule_map_[module_device_id]));
-          }
-        }
-      }
-    }
-  } deleter_;
+  DISABLE_COPY_AND_ASSIGN(CumodulePool);
 };
 
 // Call first time
 static CumodulePool& cumodule_pool_init = CumodulePool::Instance();
 }  // namespace nvptx
 
-void NvptxCompiler::Optimize(note::Module*) {}
+void NvptxCompiler::Optimize(note::Module*) {
+  // TODO(sunli) : optimize pass
+}
 
 void NvptxCompiler::Compile(const note::Module& note_module,
                             llvm::Module* llvm_module) {

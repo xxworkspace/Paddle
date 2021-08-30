@@ -33,7 +33,7 @@ namespace piano {
 namespace note {
 
 namespace {
-class DummyVisitor : public backends::NoteVisitorBase {
+class DummyVisitor : public backends::NoteVisitorBase<const Instruction&> {
  public:
   void VisitConstant(const note::Instruction&) override { state_ = "no"; }
   void VisitParameter(const note::Instruction&) override { state_ = "no"; }
