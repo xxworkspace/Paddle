@@ -17,7 +17,6 @@
 #include <string>
 #include <unordered_map>
 #include "paddle/fluid/compiler/piano/note/instruction.h"
-#include "paddle/fluid/compiler/piano/note/opcode.h"
 
 namespace paddle {
 namespace piano {
@@ -33,25 +32,23 @@ enum class KernelType : std::uint32_t {
   kJitKernel,
 };
 
-// executable context for KernelExecutable.
-struct ExecutableContext {};
-
 // KernelExecutable is a kernel execution class, it includes kernel information.
 // Each KernelType need define a derived class which inherit KernelExecutable
 // and overwrite the virtual function Run.
 // By call function Run in KernelExecutor to execute the binary code.
-
 class KernelExecutable {
  public:
   explicit KernelExecutable(const note::Instruction& note_instruction) {
     Reset(note_instruction);
   }
   virtual ~KernelExecutable();
-  virtual void Launch(const ExecutableContext&) = 0;
+  // launch kernel
+  // TODO(sunli) : handle different data type flaot/half/...
+  virtual void Launch(std::vector<void*>&, void*) = 0;
 
  public:
   void Reset(const note::Instruction& note_instruction) {
-    kernel_name_ = note_instruction.name();
+    name_ = note_instruction.name();
     // initialize KernelType
     switch (note_instruction.opcode()) {
       case note::OpCode::kBatchNormGrad:
@@ -80,19 +77,21 @@ class KernelExecutable {
     }
   }
 
+  std::string GetName() const { return name_; }
   KernelType GetKernelType() const { return kernel_type_; }
-  std::string GetKernelName() const { return kernel_name_; }
   const std::vector<std::string>& GetInputNames() const { return input_names_; }
 
  protected:
+  // instruction name
+  std::string name_;
+  // executable type
   KernelType kernel_type_;
-  std::string kernel_name_;
+  // input order
   std::vector<std::string> input_names_;
 };
 
 // KernelExecutableMap is a map of KernelExecutable.
-using KernelExecutableMap =
-    std::unordered_map<std::string, std::unique_ptr<KernelExecutable>>;
+using KernelExecutableMap = std::unordered_map<std::string, KernelExecutable*>;
 
 }  // namespace backends
 }  // namespace piano

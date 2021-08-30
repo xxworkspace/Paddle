@@ -12,20 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_executable.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/executable_pool.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
-void NvtpxExecutable::Launch(std::vector<void*>& args, void* stream) {
-  // get CUfunction name_ = func_name
-  auto func = CumodulePool::Instance().GetCuFunction(module_name_, name_);
-  CHECK_CUDA_DRIVER_SUCCESS(cuLaunchKernel(
-      func, grid_dim_.x, grid_dim_.y, grid_dim_.x, block_dim_.x, block_dim_.y,
-      block_dim_.z, 0, static_cast<CUstream>(stream), args.data(), nullptr));
-}
+// init CumodulePool
+static CumodulePool& cumodule_pool_init = CumodulePool::Instance();
+
+// init ExecutablePool
+static ExecutablePool& executable_pool_init = ExecutablePool::Instance();
 
 }  // namespace backends
 }  // namespace piano
