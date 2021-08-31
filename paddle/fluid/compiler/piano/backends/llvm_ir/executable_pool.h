@@ -26,11 +26,12 @@ namespace piano {
 namespace backends {
 
 // To be removed in future commit by using PADDLE_ENFORCE_CUDA_SUCCESS.
-#define CHECK_CUDA_DRIVER_SUCCESS(curesult)                                \
-  if (curesult != CUDA_SUCCESS) {                                          \
-    const char* msg;                                                       \
-    platform::dynload::cuGetErrorString(curesult, &msg);                   \
-    PADDLE_THROW(platform::errors::External("cu driver error : %s", msg)); \
+#define CHECK_CUDA_DRIVER_SUCCESS(curesult)                             \
+  if (curesult != CUDA_SUCCESS) {                                       \
+    const char* msg;                                                    \
+    platform::dynload::cuGetErrorString(curesult, &msg);                \
+    PADDLE_THROW(platform::errors::External("cu driver error(%d) : %s", \
+                                            curesult, msg));            \
   }
 
 class CumodulePool {
@@ -46,6 +47,9 @@ class CumodulePool {
             platform::dynload::cuModuleUnload(
                 cumodule_pool.cumodule_map_[module_device_id]);
           } catch (...) {
+            platform::errors::External(
+                "cu driver error : cuModuleUnload fail when device id = %d",
+                idx);
           }
         }
       }
@@ -95,7 +99,8 @@ class CumodulePool {
           // retain primary context for driver api to use.
           CHECK_CUDA_DRIVER_SUCCESS(
               platform::dynload::cuDevicePrimaryCtxRetain(&context, device));
-          // load CUmodule from ptx.
+          // load CUmodule from ptx
+          std::cerr << ptx_map_[module_name] << std::endl;
           CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuModuleLoadData(
               &cumodule_map_[module_device_id], ptx_map_[module_name].c_str()));
         }
@@ -130,6 +135,9 @@ class ExecutablePool {
   }
 
   void Insert(KernelExecutable* kernel_executable) {
+    PADDLE_ENFORCE_NOT_NULL(kernel_executable,
+                            platform::errors::PreconditionNotMet(
+                                "KernelExecutable pointer can't be nullptr!"));
     static std::mutex mtx;
     std::lock_guard<std::mutex> lock(mtx);
     kernel_executables_.push_back(kernel_executable);
@@ -144,6 +152,7 @@ class ExecutablePool {
  private:
   ExecutablePool() = default;
   std::vector<KernelExecutable*> kernel_executables_;
+  DISABLE_COPY_AND_ASSIGN(ExecutablePool);
 };
 
 }  // namespace backends

@@ -22,9 +22,9 @@ namespace backends {
 
 // Nvptx Executable for nvidia jit execution.
 // TODO(sunli) : overwrite the function Run.
-class NvtpxExecutable : public KernelExecutable {
+class NvptxExecutable : public KernelExecutable {
  public:
-  NvtpxExecutable(const std::string& module_name, const dim3& grid_dim,
+  NvptxExecutable(const std::string& module_name, const dim3& grid_dim,
                   const dim3& block_dim, const uint32_t shared_size,
                   const note::Instruction& note_instruction)
       : KernelExecutable(note_instruction) {

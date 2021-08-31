@@ -24,12 +24,16 @@ namespace backends {
 void GpuIrEmitter::VisitElementwiseUnary(const note::Instruction& instr) {}
 
 void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
-  // Step 1: Create kernel function, for binary op, it has 4 args,
-  // e.g., add(float*, float*, float*, int)
+  // Step 1: Create kernel function, for binary op, it has 3 args,
+  // e.g., add(float*, float*, float*)
   auto lhs_type = instr.operand(0).shape().element_type();
   auto rhs_type = instr.operand(1).shape().element_type();
   auto out_type = instr.shape().element_type();
 
+  uint32_t element_count = 1;
+  for (auto dim : instr.shape().dimensions()) {
+    element_count *= dim;
+  }
   auto func = CreateLLVMFunction(instr.name(), {lhs_type, rhs_type, out_type},
                                  llvm_module_);
 
@@ -42,12 +46,12 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
   llvm::Value* lhs = args_it++;
   llvm::Value* rhs = args_it++;
   llvm::Value* out = args_it++;
-  llvm::Value* num = args_it++;
 
   std::unique_ptr<GpuPrimitiveIrEmitter> prim =
       std::make_unique<NvptxPrimitiveIrEmitter>(&context, func);
 
   // Get thread id and this part will be added to BasicBlock "entry"
+  auto num = entry_irbuilder.getInt32(element_count);
   auto tidx = prim->ThreadIdx(&entry_irbuilder);
   auto bidx = prim->BlockIdx(&entry_irbuilder);
   auto block_dim = prim->BlockDimx(&entry_irbuilder);
@@ -84,7 +88,8 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
 
 // Scalar op
 void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Constant is unimplemented!"));
+  // PADDLE_THROW(platform::errors::Unimplemented("Constant is
+  // unimplemented!"));
 }
 
 void GpuIrEmitter::VisitParameter(const note::Instruction& instr) {

@@ -41,7 +41,7 @@ class KernelExecutable {
   explicit KernelExecutable(const note::Instruction& note_instruction) {
     Reset(note_instruction);
   }
-  virtual ~KernelExecutable();
+  virtual ~KernelExecutable() {}
   // launch kernel
   // TODO(sunli) : handle different data type flaot/half/...
   virtual void Launch(std::vector<void*>&, void*) = 0;
@@ -73,13 +73,19 @@ class KernelExecutable {
 
     // get op input global_id and name
     for (auto operand : note_instruction.operands()) {
-      input_names_.emplace_back(operand->name());
+      input_names_.push_back(operand->name());
     }
+
+    // TODO(sunli) : for multi output!!!
+    output_names_.push_back(note_instruction.name());
   }
 
   std::string GetName() const { return name_; }
   KernelType GetKernelType() const { return kernel_type_; }
   const std::vector<std::string>& GetInputNames() const { return input_names_; }
+  const std::vector<std::string>& GetOutputNames() const {
+    return output_names_;
+  }
 
  protected:
   // instruction name
@@ -88,6 +94,8 @@ class KernelExecutable {
   KernelType kernel_type_;
   // input order
   std::vector<std::string> input_names_;
+  // output order
+  std::vector<std::string> output_names_;
 };
 
 // KernelExecutableMap is a map of KernelExecutable.

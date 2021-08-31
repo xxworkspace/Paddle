@@ -64,11 +64,9 @@ llvm::Function* CreateLLVMFunction(
   for (auto type : types) {
     args_types.push_back(ElementTypeToLLVMType(type, *module)->getPointerTo());
   }
-  args_types.push_back(llvm::Type::getInt32Ty(ctx));
   llvm::ArrayRef<llvm::Type*> argsRef(args_types);
 
-  llvm::FunctionType* func_type = nullptr;
-  func_type =
+  llvm::FunctionType* func_type =
       llvm::FunctionType::get(llvm::Type::getVoidTy(ctx), argsRef, false);
   module->getOrInsertFunction(func_name, func_type);
   auto func = module->getFunction(func_name);
