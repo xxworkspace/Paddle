@@ -88,8 +88,7 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
 
 // Scalar op
 void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
-  // PADDLE_THROW(platform::errors::Unimplemented("Constant is
-  // unimplemented!"));
+  // Constant Instruction Do Nothing.
 }
 
 void GpuIrEmitter::VisitParameter(const note::Instruction& instr) {
