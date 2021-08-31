@@ -100,7 +100,6 @@ class CumodulePool {
           CHECK_CUDA_DRIVER_SUCCESS(
               platform::dynload::cuDevicePrimaryCtxRetain(&context, device));
           // load CUmodule from ptx
-          std::cerr << ptx_map_[module_name] << std::endl;
           CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuModuleLoadData(
               &cumodule_map_[module_device_id], ptx_map_[module_name].c_str()));
         }

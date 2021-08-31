@@ -34,8 +34,9 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
   for (auto dim : instr.shape().dimensions()) {
     element_count *= dim;
   }
-  auto func = CreateLLVMFunction(instr.name(), {lhs_type, rhs_type, out_type},
-                                 llvm_module_);
+  auto func = CreateLLVMFunction(
+      note::GetOpName(instr.opcode()) + "_" + std::to_string(instr.global_id()),
+      {lhs_type, rhs_type, out_type}, llvm_module_);
 
   // Step 2: Create a BasicBlock "entry"
   auto& context = llvm_module_->getContext();

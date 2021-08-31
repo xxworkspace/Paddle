@@ -27,7 +27,8 @@ void NvptxExecutable::Launch(std::vector<void*>& args, void* stream) {
           "recieve args.size() = %d, input.size() + output.size() = %d",
           args.size(), input_names_.size() + output_names_.size()));
   // get CUfunction name_ = func_name
-  auto func = CumodulePool::Instance().GetCuFunction(module_name_, name_);
+  auto func =
+      CumodulePool::Instance().GetCuFunction(module_name_, kernel_name_);
   CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuLaunchKernel(
       func, grid_dim_.x, grid_dim_.y, grid_dim_.x, block_dim_.x, block_dim_.y,
       block_dim_.z, 0, static_cast<CUstream>(stream), args.data(), nullptr));

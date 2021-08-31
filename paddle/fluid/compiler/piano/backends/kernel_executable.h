@@ -48,7 +48,8 @@ class KernelExecutable {
 
  public:
   void Reset(const note::Instruction& note_instruction) {
-    name_ = note_instruction.name();
+    kernel_name_ = note::GetOpName(note_instruction.opcode()) + "_" +
+                   std::to_string(note_instruction.global_id());
     // initialize KernelType
     switch (note_instruction.opcode()) {
       case note::OpCode::kBatchNormGrad:
@@ -80,7 +81,7 @@ class KernelExecutable {
     output_names_.push_back(note_instruction.name());
   }
 
-  std::string GetName() const { return name_; }
+  std::string GetKernelName() const { return kernel_name_; }
   KernelType GetKernelType() const { return kernel_type_; }
   const std::vector<std::string>& GetInputNames() const { return input_names_; }
   const std::vector<std::string>& GetOutputNames() const {
@@ -89,7 +90,7 @@ class KernelExecutable {
 
  protected:
   // instruction name
-  std::string name_;
+  std::string kernel_name_;
   // executable type
   KernelType kernel_type_;
   // input order
