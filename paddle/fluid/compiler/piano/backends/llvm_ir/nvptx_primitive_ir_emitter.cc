@@ -40,37 +40,37 @@ llvm::Value* NvptxPrimitiveIrEmitter::ThreadIdz(llvm::IRBuilder<>* ir_builder) {
 
 llvm::Value* NvptxPrimitiveIrEmitter::BlockDimx(llvm::IRBuilder<>* ir_builder) {
   llvm::Intrinsic::ID llvm_Intrinsic =
-      llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_x;
+      llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_x;
   return CallToLLVMIntrinsic(ir_builder, llvm_Intrinsic);
 }
 
 llvm::Value* NvptxPrimitiveIrEmitter::BlockDimy(llvm::IRBuilder<>* ir_builder) {
   llvm::Intrinsic::ID llvm_Intrinsic =
-      llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_y;
+      llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_y;
   return CallToLLVMIntrinsic(ir_builder, llvm_Intrinsic);
 }
 
 llvm::Value* NvptxPrimitiveIrEmitter::BlockDimz(llvm::IRBuilder<>* ir_builder) {
   llvm::Intrinsic::ID llvm_Intrinsic =
-      llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_z;
+      llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_z;
   return CallToLLVMIntrinsic(ir_builder, llvm_Intrinsic);
 }
 
 llvm::Value* NvptxPrimitiveIrEmitter::BlockIdx(llvm::IRBuilder<>* ir_builder) {
   llvm::Intrinsic::ID llvm_Intrinsic =
-      llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_x;
+      llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_x;
   return CallToLLVMIntrinsic(ir_builder, llvm_Intrinsic);
 }
 
 llvm::Value* NvptxPrimitiveIrEmitter::BlockIdy(llvm::IRBuilder<>* ir_builder) {
   llvm::Intrinsic::ID llvm_Intrinsic =
-      llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_y;
+      llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_y;
   return CallToLLVMIntrinsic(ir_builder, llvm_Intrinsic);
 }
 
 llvm::Value* NvptxPrimitiveIrEmitter::BlockIdz(llvm::IRBuilder<>* ir_builder) {
   llvm::Intrinsic::ID llvm_Intrinsic =
-      llvm::Intrinsic::nvvm_read_ptx_sreg_ntid_z;
+      llvm::Intrinsic::nvvm_read_ptx_sreg_ctaid_z;
   return CallToLLVMIntrinsic(ir_builder, llvm_Intrinsic);
 }
 
