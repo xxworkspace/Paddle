@@ -21,7 +21,7 @@ limitations under the License. */
 #include <vector>
 
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
-#include "paddle/fluid/compiler/piano/note_builder.h"
+#include "paddle/fluid/compiler/piano/symbolization/note_builder.h"
 #include "paddle/fluid/framework/op_registry.h"
 #include "paddle/fluid/framework/type_defs.h"
 #include "paddle/fluid/platform/enforce.h"
@@ -41,7 +41,7 @@ class PianoOpRegistry final {
   // `name` is the backend name. `supported_types` is data type list,
   // this backend can only accept the data type in list. `filter_func` is
   // a function, return false if the backend refuse this op.
-  using BackendFilterFunc = bool (*)(Operand*);
+  using BackendFilterFunc = bool (*)(symbolization::Operand*);
   static void RegisterBackend(
       const std::string& backend_name,
       const std::unordered_set<note::ElementTypeProto>& supported_types,

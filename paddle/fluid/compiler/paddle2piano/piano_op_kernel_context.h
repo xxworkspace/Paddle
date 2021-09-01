@@ -20,7 +20,7 @@ limitations under the License. */
 
 #include "paddle/fluid/compiler/paddle2piano/piano_op_registry.h"
 #include "paddle/fluid/compiler/paddle2piano/piano_scope.h"
-#include "paddle/fluid/compiler/piano/note_builder.h"
+#include "paddle/fluid/compiler/piano/symbolization/note_builder.h"
 #include "paddle/fluid/framework/op_desc.h"
 
 namespace paddle {
@@ -30,28 +30,29 @@ namespace piano {
 // lower level of piano note IR.
 // "OpDesc" is the operator information.
 // "PianoScope" is an association of a name to operand.
-// "builder" is the operand's NoteBuilder.
+// "builder" is the operand's symbolization::NoteBuilder.
 class PianoOpKernelContext {
  public:
   PianoOpKernelContext(const framework::OpDesc* op_desc, PianoScope* scope,
-                       NoteBuilder* builder)
+                       symbolization::NoteBuilder* builder)
       : op_(op_desc), scope_(scope), builder_(builder) {}
 
   // cannot returning reference to temporary
   std::string Type() const { return op_->Type(); }
 
-  NoteBuilder* Builder() const { return builder_; }
+  symbolization::NoteBuilder* Builder() const { return builder_; }
 
   bool HasInput(const std::string& name) const {
     return op_->Inputs().find(name) != op_->Inputs().end();
   }
 
-  Operand GetInput(const std::string& name) const;
+  symbolization::Operand GetInput(const std::string& name) const;
 
   // Map the outputs's operand into scope, the operand is created by
-  // NoteBuilder, and be careful the output name must existed in op's
-  // outputs.
-  void SetOutput(const std::string& name, const Operand& op) const;
+  // symbolization::NoteBuilder, and be careful the output
+  // name must existed in op's outputs.
+  void SetOutput(const std::string& name,
+                 const symbolization::Operand& op) const;
 
   const std::unordered_set<note::ElementTypeProto>& DataTypes() const {
     return PianoOpRegistry::PianoOpDataTypes(Type());
@@ -72,7 +73,7 @@ class PianoOpKernelContext {
  private:
   const framework::OpDesc* op_;
   mutable PianoScope* scope_;
-  NoteBuilder* builder_;
+  symbolization::NoteBuilder* builder_;
 };
 
 }  // namespace piano

@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-#include "paddle/fluid/compiler/piano/note_builder.h"
+#include "paddle/fluid/compiler/piano/symbolization/note_builder.h"
 #include <utility>
 #include "gtest/gtest.h"
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
@@ -20,6 +20,7 @@ limitations under the License. */
 
 namespace paddle {
 namespace piano {
+namespace symbolization {
 
 TEST(OperandTest, Basic) {
   Operand op;
@@ -119,5 +120,6 @@ TEST_F(NoteBuilderTest, Build) {
   ASSERT_EQ(Shape(note::F64, {2, 3}), Shape(signature_proto.result()));
 }
 
+}  // namespace symbolization
 }  // namespace piano
 }  // namespace paddle
