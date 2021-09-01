@@ -20,7 +20,7 @@ limitations under the License. */
 #include "paddle/fluid/compiler/paddle2piano/piano_op_kernel.h"
 #include "paddle/fluid/compiler/paddle2piano/piano_op_registry.h"
 #include "paddle/fluid/compiler/paddle2piano/piano_scope.h"
-#include "paddle/fluid/compiler/piano/note_builder.h"
+#include "paddle/fluid/compiler/piano/symbolization/note_builder.h"
 #include "paddle/fluid/framework/program_desc.h"
 
 namespace paddle {
@@ -114,7 +114,7 @@ TEST(PianoContextTest, scope) {
 
   // add operand
   std::string name1 = "op1";
-  Operand op1;
+  symbolization::Operand op1;
   scope.SetOperand(name1, op1);
 
   ASSERT_TRUE(scope.HasLocalOperand(name1));
@@ -130,7 +130,7 @@ TEST(PianoContextTest, scope) {
   ASSERT_FALSE(scope.HasKid(tmp_scope.get()));
 
   std::string name2 = "op2";
-  Operand op2;
+  symbolization::Operand op2;
   tmp_scope->SetOperand(name2, op2);
 
   ASSERT_FALSE(scope.HasLocalOperand(name2));
@@ -165,10 +165,10 @@ TEST(PianoContextTest, basic) {
 
   // create scope and NoteBuilder
   PianoScope scope;
-  Operand op_x;
+  symbolization::Operand op_x;
   scope.SetOperand("X", op_x);
 
-  NoteBuilder builder("test_expand");
+  symbolization::NoteBuilder builder("test_expand");
 
   // create PianoOpKernelContext
   PianoOpKernelContext context(op, &scope, &builder);
@@ -186,7 +186,7 @@ TEST(PianoContextTest, basic) {
   ASSERT_ANY_THROW(ctx.GetInput("Y"));
 
   // test output
-  Operand op_out;
+  symbolization::Operand op_out;
   ASSERT_NO_THROW(ctx.SetOutput("Out", op_out));
   ASSERT_ANY_THROW(ctx.SetOutput("Y", op_out));
 

@@ -12,13 +12,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-#include "paddle/fluid/compiler/piano/note_builder.h"
+#include "paddle/fluid/compiler/piano/symbolization/note_builder.h"
 #include <utility>
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
 #include "paddle/fluid/string/string_helper.h"
 
 namespace paddle {
 namespace piano {
+namespace symbolization {
 
 std::string NameConcatId(const std::string& name, int64_t id,
                          char delim = '.') {
@@ -148,5 +149,6 @@ note::ModuleProto NoteBuilder::Build() {
   return note_module;
 }
 
+}  // namespace symbolization
 }  // namespace piano
 }  // namespace paddle

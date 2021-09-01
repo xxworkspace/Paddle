@@ -22,5 +22,6 @@ cc_library(nvptx_executable SRCS nvptx_executable.cc DEPS dynload_cuda)
 cc_library(llvm_compiler SRCS llvm_compiler.cc DEPS nvptx_ir_emitter nvptx_primitive_ir_emitter note_ir llvm)
 cc_library(nvptx_compiler SRCS nvptx_compiler.cc DEPS llvm_compiler llvm)
 cc_test(nvptx_compiler_test SRCS nvptx_compiler_test.cc
-        DEPS nvptx_compiler note_ir note_builder nvptx_executable executable_pool dynload_cuda)
+        DEPS nvptx_compiler note_ir nvptx_executable 
+        executable_pool dynload_cuda piano_symbolization_builder)
 target_link_libraries(nvptx_compiler_test ${LLVM_LIBS})

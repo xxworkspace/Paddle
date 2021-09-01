@@ -23,7 +23,7 @@
 #include "paddle/fluid/compiler/piano/note/instruction.h"
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
 #include "paddle/fluid/compiler/piano/note/opcode.h"
-#include "paddle/fluid/compiler/piano/note_builder.h"
+#include "paddle/fluid/compiler/piano/symbolization/note_builder.h"
 #include "paddle/fluid/platform/gpu_info.h"
 
 namespace paddle {
@@ -143,7 +143,7 @@ TEST(NvptxCompiler, Apply) {
   platform::SetDeviceId(0);
 
   // note builder
-  NoteBuilder note_builder("test_note_builder");
+  symbolization::NoteBuilder note_builder("test_note_builder");
   {
     note::InstructionProto a_proto, b_proto, c_proto;
     a_proto.set_name("A");
@@ -168,7 +168,7 @@ TEST(NvptxCompiler, Apply) {
     c_shape->add_dimensions(32);
 
     // build note module
-    std::vector<Operand> ops;
+    std::vector<symbolization::Operand> ops;
     ops.push_back(note_builder.AppendInstruction(std::move(a_proto),
                                                  note::OpCode::kConstant, {}));
     ops.push_back(note_builder.AppendInstruction(std::move(b_proto),
