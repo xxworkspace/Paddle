@@ -16,13 +16,16 @@ limitations under the License. */
 
 #include <cstdint>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 #include "paddle/fluid/compiler/piano/note/attribute_key_defs.h"
 #include "paddle/fluid/compiler/piano/note/element_type_util.h"
 #include "paddle/fluid/compiler/piano/note/populate_attribute_value.h"
+#include "paddle/fluid/compiler/piano/note/type_traits.h"
 #include "paddle/fluid/compiler/piano/shape.h"
 #include "paddle/fluid/compiler/piano/symbolization/note_builder.h"
+#include "paddle/fluid/compiler/piano/symbolization/shape_inference.h"
 
 namespace paddle {
 namespace piano {
@@ -36,15 +39,20 @@ class Operand;
 Operand Parameter(NoteBuilder* builder, int64_t parameter_index,
                   const Shape& shape, const std::string& name);
 
-// a constant instruction passing literal 'value' with 0-D array(scalar)
-// `builder`: NoteBuilder of current module
-// `value`: The scalar value. users should explicitly specifiy the
-//     data type when the value may be obscure and deduced to
-//     another compatible type
+// a constant instruction literal 'value' with N-D array
+// (scalar or multi-dimension array)
+//    `builder`: NoteBuilder of current module
+//    `value`: The literal value. users should explicitly specifiy the
+//        data type when the value may be obscure and deduced to
+//        another compatible type
+//    `shape`: Shape of the literal
 template <typename NativeT>
-Operand ConstantD0(NoteBuilder* builder, NativeT value) {
-  // construct shape
-  Shape result_shape(note::NativeToElementTypeProto<NativeT>(), {});
+Operand Constant(NoteBuilder* builder, const NativeT& value,
+                 const Shape& shape) {
+  static_assert(note::IsOneOfAttrType<NativeT>::value,
+                "This NativeT is not supported in Constant");
+
+  auto result_shape = InferConstantShape<NativeT>(value, shape);
   note::InstructionProto instr;
   *instr.mutable_shape() = result_shape.ToProto();
   // fill attribute of kConstant instruction

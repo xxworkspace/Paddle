@@ -32,24 +32,34 @@ TEST(MetaOpTest, TestParameter) {
   EXPECT_EQ(Shape(note::F32, {1, 2}), param_op.Shape());
 }
 
-TEST(MetaOpTest, TestConstantD0) {
-  NoteBuilder builder("test_constant_d0");
-  auto constant_d0_op = ConstantD0<int32_t>(&builder, 110);
+TEST(MetaOpTest, TestConstant) {
+  NoteBuilder builder("test_constant");
+  // add a constant instruction with scalar value
+  auto constant_d0_op = Constant<int32_t>(&builder, 110, Shape(note::S32, {}));
   ASSERT_EQ(&builder, constant_d0_op.Builder());
   EXPECT_TRUE(constant_d0_op.Valid());
   EXPECT_EQ(Shape(note::S32, {}), constant_d0_op.Shape());
+  // append a constant instruction with 2-D array value
+  auto constant_d2_op = Constant(&builder, std::vector<int32_t>({110, 119}),
+                                 Shape(note::S32, {1, 2}));
+  ASSERT_EQ(&builder, constant_d2_op.Builder());
+  EXPECT_TRUE(constant_d2_op.Valid());
+  EXPECT_EQ(Shape(note::S32, {1, 2}), constant_d2_op.Shape());
 
+  // check the final build module
   auto&& module_proto = builder.Build();
   ASSERT_EQ(1, module_proto.functions_size());
   const auto& entry_proto = module_proto.functions(0);
-  ASSERT_EQ(1, entry_proto.instructions_size());
+  ASSERT_EQ(2, entry_proto.instructions_size());
   EXPECT_EQ(note::GetOpName(note::OpCode::kConstant),
             entry_proto.instructions(0).opcode());
-  const auto& constant_instr = entry_proto.instructions(0);
-  ASSERT_EQ(1, constant_instr.attrs().size());
-  const auto& attr_value = constant_instr.attrs().at(note::kConstantValue);
-  ASSERT_TRUE(attr_value.has_i());
-  EXPECT_EQ(110, attr_value.i());
+  const auto& constant_d2_instr = entry_proto.instructions(1);
+  ASSERT_EQ(1, constant_d2_instr.attrs().size());
+  const auto& attr_value = constant_d2_instr.attrs().at(note::kConstantValue);
+  ASSERT_TRUE(attr_value.has_ints());
+  EXPECT_EQ(2, attr_value.ints().value_size());
+  EXPECT_EQ(110, attr_value.ints().value(0));
+  EXPECT_EQ(119, attr_value.ints().value(1));
 }
 
 TEST(MetaOpTest, TestBroadcast) {

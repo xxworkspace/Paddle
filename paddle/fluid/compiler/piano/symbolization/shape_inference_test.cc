@@ -63,6 +63,22 @@ TEST(ShapeInferenceTest, TestInferBroadcastShape) {
   ASSERT_EQ(Shape(note::U64, {2, 3, 6}), res2);
 }
 
+TEST(ShapeInferenceTest, TestInferConstantShape) {
+  // check validation on scalar value
+  ASSERT_THROW(InferConstantShape<int32_t>(110, Shape(note::F32, {1})),
+               paddle::platform::EnforceNotMet);
+
+  // check validation on multi-dimension array value
+  ASSERT_THROW(InferConstantShape(std::vector<int32_t>({110, 119}),
+                                  Shape(note::F32, {1})),
+               paddle::platform::EnforceNotMet);
+
+  // normal call
+  ASSERT_EQ(Shape(note::F32, {1, 2}),
+            InferConstantShape(std::vector<int32_t>({110, 119}),
+                               Shape(note::F32, {1, 2})));
+}
+
 }  // namespace symbolization
 }  // namespace piano
 }  // namespace paddle
