@@ -33,6 +33,17 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseBinary(
   auto lhs_type = instr.operand(0).shape().element_type();
   auto rhs_type = instr.operand(1).shape().element_type();
   auto out_type = instr.shape().element_type();
+  PADDLE_ENFORCE_EQ(
+      lhs_type, rhs_type,
+      platform::errors::InvalidArgument(
+          "The inputs of Binary Op should have the same data type, "
+          "but received the types of inputs are %s and %s.",
+          lhs_type, rhs_type));
+
+  uint32_t element_count = 1;
+  for (auto dim : instr.shape().dimensions()) {
+    element_count *= dim;
+  }
 
   auto func =
       CreateLLVMFunction(instr.name(), {lhs_type, rhs_type, out_type},
@@ -47,7 +58,6 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseBinary(
   llvm::Value* lhs = args_it++;
   llvm::Value* rhs = args_it++;
   llvm::Value* out = args_it++;
-  llvm::Value* num = args_it++;
 
   PrimitiveIrEmitterType primitive_ir_emitter(&context, func);
 
@@ -90,10 +100,8 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseBinary(
 }
 
 // Scalar op
-template <typename PrimitiveIrEmitterType>
-void GpuIrEmitter<PrimitiveIrEmitterType>::VisitConstant(
-    const note::Instruction& instr) {
-  PADDLE_THROW(platform::errors::Unimplemented("Constant is unimplemented!"));
+void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
+  // Constant Instruction Do Nothing.
 }
 
 template <typename PrimitiveIrEmitterType>

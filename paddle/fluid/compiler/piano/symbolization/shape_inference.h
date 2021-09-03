@@ -16,6 +16,7 @@ limitations under the License. */
 
 #include <vector>
 #include "paddle/fluid/compiler/piano/note/opcode.h"
+#include "paddle/fluid/compiler/piano/note/type_traits.h"
 #include "paddle/fluid/compiler/piano/shape.h"
 
 namespace paddle {
@@ -38,6 +39,32 @@ Shape InferBinaryOpShape(note::OpCode opcode, const Shape& lhs,
 Shape InferBroadcastShape(const Shape& input_shape,
                           const std::vector<int64_t>& out_dimensions,
                           const std::vector<int64_t>& dimensions_alignment);
+
+// inference for constant operation
+template <typename NativeT>
+typename std::enable_if<note::IsVector<NativeT>::value>::type ValidateShape(
+    const NativeT& value, const Shape& shape) {
+  PADDLE_ENFORCE_EQ(shape.IsArray(), true,
+                    platform::errors::InvalidArgument(
+                        "Shape of vector input should be array tuple"));
+  PADDLE_ENFORCE_EQ(
+      shape.Numel(), value.size(),
+      platform::errors::InvalidArgument("Number of element should be euqal to"
+                                        "the shape contains"));
+}
+
+template <typename NativeT>
+typename std::enable_if<!note::IsVector<NativeT>::value>::type ValidateShape(
+    const NativeT& value, const Shape& shape) {
+  PADDLE_ENFORCE_EQ(shape.Rank(), 0, platform::errors::InvalidArgument(
+                                         "Rank of Scalar value should be 0"));
+}
+
+template <typename NativeT>
+Shape InferConstantShape(const NativeT& value, const Shape& shape) {
+  ValidateShape(value, shape);
+  return shape;
+}
 
 }  // namespace symbolization
 }  // namespace piano

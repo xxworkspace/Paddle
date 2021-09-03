@@ -17,7 +17,6 @@ limitations under the License. */
 #include <numeric>
 #include <utility>
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
-#include "paddle/fluid/compiler/piano/symbolization/shape_inference.h"
 #include "paddle/fluid/platform/enforce.h"
 
 namespace paddle {

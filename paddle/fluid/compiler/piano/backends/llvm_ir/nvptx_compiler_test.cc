@@ -18,6 +18,8 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IntrinsicsNVPTX.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/executable_pool.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_executable.h"
 #include "paddle/fluid/compiler/piano/note/instruction.h"
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
 #include "paddle/fluid/compiler/piano/note/opcode.h"
@@ -85,9 +87,55 @@ TEST(NvptxCompiler, CompileToPtx) {
     entry_builder.CreateStore(_6, _3);
 
     entry_builder.CreateRetVoid();
+
+    llvm::NamedMDNode* nvvm_annotations_node =
+        llvm_module.getOrInsertNamedMetadata("nvvm.annotations");
+    nvvm_annotations_node->addOperand(llvm::MDNode::get(
+        context, {llvm::ConstantAsMetadata::get(cu_add),
+                  llvm::MDString::get(context, "kernel"),
+                  llvm::ConstantAsMetadata::get(entry_builder.getInt32(1))}));
   }
   llvm_module.print(llvm::errs(), nullptr);
-  LOG(INFO) << test_compiler.CallCompileToPtx(&llvm_module);
+  auto ptx = test_compiler.CallCompileToPtx(&llvm_module);
+  LOG(INFO) << ptx;
+
+  // set device
+  platform::SetDeviceId(0);
+  CumodulePool::Instance().Insert("CompileToPtx", ptx);
+  auto func = CumodulePool::Instance().GetCuFunction("CompileToPtx", "CuAdd");
+
+  float host_a[32], host_b[32], host_c[32];
+  for (int idx = 0; idx < 32; ++idx) {
+    host_a[idx] = static_cast<float>(idx);
+    host_b[idx] = static_cast<float>(idx);
+  }
+
+  float *dev_a = nullptr, *dev_b = nullptr, *dev_c = nullptr;
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_a, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_b, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_c, 32 * sizeof(float)));
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_a, host_a, sizeof(float) * 32, cudaMemcpyHostToDevice));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_b, host_b, sizeof(float) * 32, cudaMemcpyHostToDevice));
+
+  std::vector<void*> args = {&dev_a, &dev_b, &dev_c};
+
+  CHECK_CUDA_DRIVER_SUCCESS(platform::dynload::cuLaunchKernel(
+      func, 1, 1, 1, 32, 1, 1, 0, nullptr, args.data(), nullptr));
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaStreamSynchronize(nullptr));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(host_c, dev_c, sizeof(float) * 32, cudaMemcpyDeviceToHost));
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_a));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_b));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_c));
+
+  for (int idx = 0; idx < 32; ++idx) {
+    ASSERT_EQ(host_c[idx], 2.0 * idx);
+  }
 }
 
 TEST(NvptxCompiler, Apply) {
@@ -133,7 +181,43 @@ TEST(NvptxCompiler, Apply) {
   // compile
   NvptxCompiler nvptx_compiler;
   // To removet 'EXPECT_THROW' in future commit
-  EXPECT_THROW(nvptx_compiler.Apply(&note_module), platform::EnforceNotMet);
+  // EXPECT_THROW(nvptx_compiler.Apply(&note_module), platform::EnforceNotMet);
+  nvptx_compiler.Apply(&note_module);
+
+  // TestExecutable
+  auto* instr = note_module.entry_function().instruction(std::int64_t(2));
+  NvptxExecutable executable(note_module.name(), dim3(1), dim3(32), 0, *instr);
+
+  float host_a[32], host_b[32], host_c[32];
+  for (int idx = 0; idx < 32; ++idx) {
+    host_a[idx] = static_cast<float>(idx);
+    host_b[idx] = static_cast<float>(idx);
+  }
+
+  float *dev_a = nullptr, *dev_b = nullptr, *dev_c = nullptr;
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_a, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_b, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_c, 32 * sizeof(float)));
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_a, host_a, sizeof(float) * 32, cudaMemcpyHostToDevice));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_b, host_b, sizeof(float) * 32, cudaMemcpyHostToDevice));
+
+  std::vector<void*> args = {&dev_a, &dev_b, &dev_c};
+  executable.Launch(args, nullptr);
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaStreamSynchronize(nullptr));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(host_c, dev_c, sizeof(float) * 32, cudaMemcpyDeviceToHost));
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_a));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_b));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_c));
+
+  for (int idx = 0; idx < 32; ++idx) {
+    ASSERT_EQ(host_c[idx], 2.0 * idx);
+  }
 }
 
 }  // namespace backends

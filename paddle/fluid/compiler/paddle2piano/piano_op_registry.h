@@ -35,6 +35,8 @@ class PianoOpMaker;
 class PianoOpRegistry final {
  public:
   using OpKernelFunc = std::function<void(const PianoOpKernelContext&)>;
+
+  // map library to op kernel, default library is PLAIN
   using OpKernelMap = std::unordered_map<std::string, OpKernelFunc>;
 
   // Register a Piano backend.
@@ -83,6 +85,7 @@ class PianoOpRegistry final {
     Instance().ops_.at(op_type)->kernel_.emplace(library_type, func);
   }
 
+  // return OpKernelMap, which is the map from library name to PianoOpKernel
   static const OpKernelMap& AllPianoOpKernels(const std::string& op_type);
 
  private:

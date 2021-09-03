@@ -123,12 +123,13 @@ class PianoScope {
  private:
   explicit PianoScope(const PianoScope* parent) : parent_(parent) {}
 
-  DISABLE_COPY_AND_ASSIGN(PianoScope);
-
   std::unordered_map<std::string, symbolization::Operand> operands_;
 
   const PianoScope* parent_;
   mutable std::vector<std::unique_ptr<PianoScope>> kids_;
+
+  // keep this macro in the last line
+  DISABLE_COPY_AND_ASSIGN(PianoScope);
 };
 
 }  // namespace piano

@@ -13,6 +13,7 @@
 // limitations under the License.
 #pragma once
 
+#include <cuda_runtime_api.h>
 #include "paddle/fluid/compiler/piano/backends/kernel_executable.h"
 
 namespace paddle {
@@ -21,19 +22,24 @@ namespace backends {
 
 // Nvptx Executable for nvidia jit execution.
 // TODO(sunli) : overwrite the function Run.
-class NvtpxExecutable : public KernelExecutable {
+class NvptxExecutable : public KernelExecutable {
  public:
-  NvtpxExecutable(const std::string module_name,
+  NvptxExecutable(const std::string& module_name, const dim3& grid_dim,
+                  const dim3& block_dim, const uint32_t shared_size,
                   const note::Instruction& note_instruction)
       : KernelExecutable(note_instruction) {
     module_name_ = module_name;
+    grid_dim_ = grid_dim;
+    block_dim_ = block_dim;
+    shared_size_ = shared_size;
   }
-  void Launch(const ExecutableContext&) override;
+  void Launch(std::vector<void*>&, void*) override;
 
  private:
-  int device_to_execute_{-1};
   std::string module_name_;
-  CUfunction cu_function_{nullptr};
+  dim3 grid_dim_;
+  dim3 block_dim_;
+  uint32_t shared_size_;
 };
 
 }  // namespace backends

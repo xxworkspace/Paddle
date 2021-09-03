@@ -73,6 +73,16 @@ TEST_F(ShapeTest, ShapeToString) {
   ASSERT_EQ("f32[2, 3]{}", array_string);
 }
 
+TEST_F(ShapeTest, Basic) {
+  // scalar
+  ASSERT_EQ(0, scalar_.Rank());
+  ASSERT_EQ(1, scalar_.Numel());
+
+  // 2-D array
+  ASSERT_EQ(2, array1_.Rank());
+  ASSERT_EQ(18, array1_.Numel());
+}
+
 TEST_F(ShapeTest, EqualToOther) {
   Shape s8_d23_no_layout(note::S32, {2, 3});
   Shape f32_d23_no_layout(note::F32, {2, 3});

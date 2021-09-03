@@ -1,7 +1,7 @@
 cc_library(llvm_utils SRCS llvm_utils.cc DEPS llvm)
 
 cc_library(primitive_ir_emitter SRCS primitive_ir_emitter.cc DEPS llvm)
-cc_library(gpu_primitive_ir_emitter SRCS gpu_primitive_ir_emitter.cc DEPS primitive_ir_emitter llvm)
+cc_library(gpu_primitive_ir_emitter SRCS gpu_primitive_ir_emitter.cc DEPS primitive_ir_emitter llvm note_template_util)
 cc_library(nvptx_primitive_ir_emitter SRCS nvptx_primitive_ir_emitter.cc
     DEPS gpu_primitive_ir_emitter llvm_utils llvm)
 
@@ -14,11 +14,14 @@ cc_library(gpu_ir_emitter SRCS gpu_ir_emitter.cc DEPS ir_emitter llvm_utils llvm
 cc_library(nvptx_ir_emitter SRCS nvptx_ir_emitter.cc DEPS gpu_ir_emitter nvptx_primitive_ir_emitter llvm)
 
 cc_test(nvptx_ir_emitter_test SRCS nvptx_ir_emitter_test.cc
-        DEPS nvptx_ir_emitter note_ir note_proto)
+        DEPS nvptx_ir_emitter note_ir note_proto piano_symbolization_builder)
 target_link_libraries(nvptx_ir_emitter_test ${LLVM_LIBS})
 
+cc_library(executable_pool SRCS executable_pool.cc DEPS dynload_cuda)
+cc_library(nvptx_executable SRCS nvptx_executable.cc DEPS dynload_cuda)
 cc_library(llvm_compiler SRCS llvm_compiler.cc DEPS nvptx_ir_emitter nvptx_primitive_ir_emitter note_ir llvm)
-cc_library(nvptx_compiler SRCS nvptx_compiler.cc DEPS llvm_compiler llvm dynload_cuda)
+cc_library(nvptx_compiler SRCS nvptx_compiler.cc DEPS llvm_compiler llvm)
 cc_test(nvptx_compiler_test SRCS nvptx_compiler_test.cc
-        DEPS nvptx_compiler note_ir piano_symbolization_builder)
+        DEPS nvptx_compiler note_ir nvptx_executable 
+        executable_pool dynload_cuda piano_symbolization_builder)
 target_link_libraries(nvptx_compiler_test ${LLVM_LIBS})
