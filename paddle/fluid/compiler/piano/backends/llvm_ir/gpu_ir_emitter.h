@@ -23,11 +23,12 @@ namespace backends {
 // for GPU.
 // It implement the visit function for note::Instruction's translation.
 
-class GpuIrEmitter : public IrEmitter {
+template <typename PrimitiveIrEmitterType>
+class GpuIrEmitter : public IrEmitter<PrimitiveIrEmitterType> {
  public:
   GpuIrEmitter(llvm::Module* llvm_module,
                KernelExecutableMap* kernel_executable_map)
-      : IrEmitter(llvm_module, kernel_executable_map) {}
+      : IrEmitter<PrimitiveIrEmitterType>(llvm_module, kernel_executable_map) {}
   virtual ~GpuIrEmitter() {}
 
   void VisitElementwiseUnary(const note::Instruction&) override;
@@ -60,6 +61,9 @@ class GpuIrEmitter : public IrEmitter {
   void VisitRng(const note::Instruction&) override;
   void VisitSort(const note::Instruction&) override;
   void VisitTuple(const note::Instruction&) override;
+
+  // fusion
+  void VisitFusion(const note::Instruction&) override;
 };
 
 }  // namespace backends

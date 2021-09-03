@@ -13,78 +13,115 @@
 // limitations under the License.
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_primitive_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
-void IrEmitter::VisitCast(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitCast(
+    const note::Instruction& instr) {
   VisitElementwiseUnary(instr);
 }
 
-void IrEmitter::VisitExp(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitExp(
+    const note::Instruction& instr) {
   VisitElementwiseUnary(instr);
 }
 
-void IrEmitter::VisitLog(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitLog(
+    const note::Instruction& instr) {
   VisitElementwiseUnary(instr);
 }
 
-void IrEmitter::VisitNegative(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitNegative(
+    const note::Instruction& instr) {
   VisitElementwiseUnary(instr);
 }
 
-void IrEmitter::VisitNot(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitNot(
+    const note::Instruction& instr) {
   VisitElementwiseUnary(instr);
 }
 
-void IrEmitter::VisitRsqrt(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitRsqrt(
+    const note::Instruction& instr) {
   VisitElementwiseUnary(instr);
 }
 
-void IrEmitter::VisitSqrt(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitSqrt(
+    const note::Instruction& instr) {
   VisitElementwiseUnary(instr);
 }
 
-void IrEmitter::VisitAdd(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitAdd(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitAnd(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitAnd(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitCompare(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitCompare(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitDivide(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitDivide(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitMaximum(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitMaximum(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitMinimum(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitMinimum(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitMultiply(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitMultiply(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitOr(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitOr(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitSubtract(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitSubtract(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
 
-void IrEmitter::VisitXor(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void IrEmitter<PrimitiveIrEmitterType>::VisitXor(
+    const note::Instruction& instr) {
   VisitElementwiseBinary(instr);
 }
+
+template class IrEmitter<NvptxPrimitiveIrEmitter>;
 
 }  // namespace backends
 }  // namespace piano

@@ -9,7 +9,7 @@ cc_test(nvptx_primitive_ir_emitter_test SRCS nvptx_primitive_ir_emitter_test.cc
         DEPS nvptx_primitive_ir_emitter)
 target_link_libraries(nvptx_primitive_ir_emitter_test ${LLVM_LIBS})
 
-cc_library(ir_emitter SRCS ir_emitter.cc DEPS llvm)
+cc_library(ir_emitter SRCS ir_emitter.cc DEPS llvm nvptx_primitive_ir_emitter)
 cc_library(gpu_ir_emitter SRCS gpu_ir_emitter.cc DEPS ir_emitter llvm_utils llvm)
 cc_library(nvptx_ir_emitter SRCS nvptx_ir_emitter.cc DEPS gpu_ir_emitter nvptx_primitive_ir_emitter llvm)
 

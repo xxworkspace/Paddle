@@ -40,6 +40,13 @@ class NvptxPrimitiveIrEmitter : public GpuPrimitiveIrEmitter {
   llvm::Value* GridDimz(llvm::IRBuilder<>*) override;
   void ThreadSync(llvm::IRBuilder<>*) override;
   llvm::Value* Alloca(llvm::IRBuilder<>*, unsigned) override;
+
+  llvm::Value* GetGridThreadIndex(llvm::IRBuilder<>*) override;
+  llvm::Value* GetBlockThreadIndex(llvm::IRBuilder<>*) override;
+  llvm::Value* GetWarpThreadIndex(llvm::IRBuilder<>*) override;
+  llvm::Value* GetGridBlockIndex(llvm::IRBuilder<>*) override;
+  llvm::Value* GetBlockWarpIndex(llvm::IRBuilder<>*) override;
+  llvm::Value* GetBlockSize(llvm::IRBuilder<>*) override;
 };
 
 }  // namespace backends

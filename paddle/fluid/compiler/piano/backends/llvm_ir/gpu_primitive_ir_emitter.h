@@ -55,6 +55,7 @@ class GpuPrimitiveIrEmitter : public PrimitiveIrEmitter {
   void VisitRng(const note::Instruction&) override;
   void VisitSort(const note::Instruction&) override;
   void VisitTuple(const note::Instruction&) override;
+  void VisitFusion(const note::Instruction&) override;
 
   // about the base code block,
   virtual llvm::Value* ThreadIdx(llvm::IRBuilder<>*) = 0;
@@ -71,6 +72,13 @@ class GpuPrimitiveIrEmitter : public PrimitiveIrEmitter {
   virtual llvm::Value* GridDimz(llvm::IRBuilder<>* ir_builder) = 0;
   virtual void ThreadSync(llvm::IRBuilder<>*) = 0;
   virtual llvm::Value* Alloca(llvm::IRBuilder<>*, unsigned) = 0;
+
+  virtual llvm::Value* GetGridThreadIndex(llvm::IRBuilder<>*) = 0;
+  virtual llvm::Value* GetBlockThreadIndex(llvm::IRBuilder<>*) = 0;
+  virtual llvm::Value* GetWarpThreadIndex(llvm::IRBuilder<>*) = 0;
+  virtual llvm::Value* GetGridBlockIndex(llvm::IRBuilder<>*) = 0;
+  virtual llvm::Value* GetBlockWarpIndex(llvm::IRBuilder<>*) = 0;
+  virtual llvm::Value* GetBlockSize(llvm::IRBuilder<>*) = 0;
 };
 
 }  // namespace backends

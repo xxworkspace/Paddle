@@ -43,6 +43,10 @@ class PrimitiveIrGenerator {
     return generator_(ir_array, ir_builder);
   }
 
+  IrArray operator()(const IrArray& ir_array, llvm::IRBuilder<>* ir_builder) {
+    return generator_(ir_array, ir_builder);
+  }
+
  private:
   std::string generator_name_;
   std::string generator_type_;

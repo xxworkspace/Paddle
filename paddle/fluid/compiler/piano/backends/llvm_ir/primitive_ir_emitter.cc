@@ -177,6 +177,8 @@ PrimitiveIrEmitter::GetPrimitiveIrGenerators() {
   return primitive_ir_generators_;
 }
 
+void PrimitiveIrEmitter::Clear() { primitive_ir_generators_.clear(); }
+
 }  // namespace backends
 }  // namespace piano
 }  // namespace paddle

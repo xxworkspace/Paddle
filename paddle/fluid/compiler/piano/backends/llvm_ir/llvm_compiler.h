@@ -38,7 +38,8 @@ class LlvmCompiler : public Compiler {
   virtual void Optimize(note::Module*) = 0;
   // convert each note::Instruction in note::Module to llvm ir and get execution
   // args.
-  void ConvertToIr(const note::Module&, llvm::Module*, KernelExecutableMap*);
+  virtual void ConvertToIr(const note::Module&, llvm::Module*,
+                           KernelExecutableMap*) = 0;
 
   // use llvm ir pass to optimize the llvm::Module and comile llvm::module to
   // executable binary code on tareget device.

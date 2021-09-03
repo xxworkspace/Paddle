@@ -29,6 +29,8 @@ class NvptxCompiler : public LlvmCompiler {
 
  protected:
   void Optimize(note::Module*) override;
+  void ConvertToIr(const note::Module&, llvm::Module*,
+                   KernelExecutableMap*) override;
   void Compile(const note::Module&, llvm::Module*) override;
 
  protected:

@@ -99,6 +99,30 @@ llvm::Value* NvptxPrimitiveIrEmitter::Alloca(llvm::IRBuilder<>* ir_builder,
   return nullptr;
 }
 
+llvm::Value* NvptxPrimitiveIrEmitter::GetGridThreadIndex(llvm::IRBuilder<>*) {
+  return nullptr;
+}
+
+llvm::Value* NvptxPrimitiveIrEmitter::GetBlockThreadIndex(llvm::IRBuilder<>*) {
+  return nullptr;
+}
+
+llvm::Value* NvptxPrimitiveIrEmitter::GetWarpThreadIndex(llvm::IRBuilder<>*) {
+  return nullptr;
+}
+
+llvm::Value* NvptxPrimitiveIrEmitter::GetGridBlockIndex(llvm::IRBuilder<>*) {
+  return nullptr;
+}
+
+llvm::Value* NvptxPrimitiveIrEmitter::GetBlockWarpIndex(llvm::IRBuilder<>*) {
+  return nullptr;
+}
+
+llvm::Value* NvptxPrimitiveIrEmitter::GetBlockSize(llvm::IRBuilder<>*) {
+  return nullptr;
+}
+
 }  // namespace backends
 }  // namespace piano
 }  // namespace paddle

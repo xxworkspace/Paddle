@@ -35,46 +35,10 @@ namespace note {
 namespace {
 class DummyVisitor : public backends::NoteVisitorBase<const Instruction&> {
  public:
-  void VisitConstant(const note::Instruction&) override { state_ = "no"; }
-  void VisitParameter(const note::Instruction&) override { state_ = "no"; }
-  void VisitBatchNormGrad(const note::Instruction&) override { state_ = "no"; }
-  void VisitBatchNormInference(const note::Instruction&) override {
-    state_ = "no";
-  }
-  void VisitBatchNormTraining(const note::Instruction&) override {
-    state_ = "no";
-  }
-  void VisitConvolution(const note::Instruction&) override { state_ = "no"; }
-  void VisitDot(const note::Instruction&) override { state_ = "no"; }
-  void VisitBroadcast(const note::Instruction&) override { state_ = "no"; }
-  void VisitCast(const note::Instruction&) override { state_ = "no"; }
-  void VisitCopy(const note::Instruction&) override { state_ = "no"; }
-  void VisitExp(const note::Instruction&) override { state_ = "no"; }
-  void VisitLog(const note::Instruction&) override { state_ = "no"; }
-  void VisitNegative(const note::Instruction&) override { state_ = "no"; }
-  void VisitNot(const note::Instruction&) override { state_ = "no"; }
-  void VisitReshape(const note::Instruction&) override { state_ = "no"; }
-  void VisitReverse(const note::Instruction&) override { state_ = "no"; }
-  void VisitRsqrt(const note::Instruction&) override { state_ = "no"; }
-  void VisitSlice(const note::Instruction&) override { state_ = "no"; }
-  void VisitSqrt(const note::Instruction&) override { state_ = "no"; }
-  void VisitTranspose(const note::Instruction&) override { state_ = "no"; }
-  void VisitAdd(const note::Instruction&) override { state_ = "yes"; }
-  void VisitAnd(const note::Instruction&) override { state_ = "no"; }
-  void VisitCompare(const note::Instruction&) override { state_ = "no"; }
-  void VisitDivide(const note::Instruction&) override { state_ = "no"; }
-  void VisitMaximum(const note::Instruction&) override { state_ = "no"; }
-  void VisitMinimum(const note::Instruction&) override { state_ = "no"; }
-  void VisitMultiply(const note::Instruction&) override { state_ = "no"; }
-  void VisitOr(const note::Instruction&) override { state_ = "no"; }
-  void VisitSubtract(const note::Instruction&) override { state_ = "no"; }
-  void VisitXor(const note::Instruction&) override { state_ = "no"; }
-  void VisitSelect(const note::Instruction&) override { state_ = "no"; }
-  void VisitConcatenate(const note::Instruction&) override { state_ = "no"; }
-  void VisitReduce(const note::Instruction&) override { state_ = "no"; }
-  void VisitRng(const note::Instruction&) override { state_ = "no"; }
-  void VisitSort(const note::Instruction&) override { state_ = "no"; }
-  void VisitTuple(const note::Instruction&) override { state_ = "no"; }
+#define VisitInstruction(instr, ...) \
+  void Visit##instr(const note::Instruction&) override { state_ = "no"; }
+  OPCODE_HANDLER(VisitInstruction)
+#undef VisitInstruction
 
   const std::string& state() { return state_; }
 

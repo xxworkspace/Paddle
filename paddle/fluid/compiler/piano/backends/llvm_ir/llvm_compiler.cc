@@ -39,24 +39,6 @@ KernelExecutableMap LlvmCompiler::Apply(note::Module* note_module) {
   return kernel_executable_map;
 }
 
-void LlvmCompiler::ConvertToIr(const note::Module& note_module,
-                               llvm::Module* llvm_module,
-                               KernelExecutableMap* kernel_executable_map) {
-  // ir emitter
-  NvptxIrEmitter nvptx_ir_emitter(llvm_module, kernel_executable_map);
-
-  // get entry function
-  auto& entry_function = note_module.entry_function();
-
-  // get instruction in entry_function
-  auto instructions = entry_function.instructions();
-
-  // generate llvm ir for each instruction
-  for (auto& instr : instructions) {
-    instr.Accept(&nvptx_ir_emitter);
-  }
-}
-
 }  // namespace backends
 }  // namespace piano
 }  // namespace paddle

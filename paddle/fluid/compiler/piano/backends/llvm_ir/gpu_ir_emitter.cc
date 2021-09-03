@@ -15,26 +15,31 @@
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_ir_emitter.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/llvm_utils.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_primitive_ir_emitter.h"
-#include "paddle/fluid/compiler/piano/note/instruction.h"
+#include "paddle/fluid/compiler/piano/note/function.h"
 
 namespace paddle {
 namespace piano {
 namespace backends {
 
-void GpuIrEmitter::VisitElementwiseUnary(const note::Instruction& instr) {}
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseUnary(
+    const note::Instruction& instr) {}
 
-void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseBinary(
+    const note::Instruction& instr) {
   // Step 1: Create kernel function, for binary op, it has 4 args,
   // e.g., add(float*, float*, float*, int)
   auto lhs_type = instr.operand(0).shape().element_type();
   auto rhs_type = instr.operand(1).shape().element_type();
   auto out_type = instr.shape().element_type();
 
-  auto func = CreateLLVMFunction(instr.name(), {lhs_type, rhs_type, out_type},
-                                 llvm_module_);
+  auto func =
+      CreateLLVMFunction(instr.name(), {lhs_type, rhs_type, out_type},
+                         IrEmitter<PrimitiveIrEmitterType>::llvm_module_);
 
   // Step 2: Create a BasicBlock "entry"
-  auto& context = llvm_module_->getContext();
+  auto& context = IrEmitter<PrimitiveIrEmitterType>::llvm_module_->getContext();
   auto entry_block = llvm::BasicBlock::Create(context, "entry", func);
   llvm::IRBuilder<> entry_irbuilder(entry_block);
 
@@ -44,22 +49,23 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
   llvm::Value* out = args_it++;
   llvm::Value* num = args_it++;
 
-  std::unique_ptr<GpuPrimitiveIrEmitter> prim =
-      std::make_unique<NvptxPrimitiveIrEmitter>(&context, func);
+  PrimitiveIrEmitterType primitive_ir_emitter(&context, func);
 
   // Get thread id and this part will be added to BasicBlock "entry"
-  auto tidx = prim->ThreadIdx(&entry_irbuilder);
-  auto bidx = prim->BlockIdx(&entry_irbuilder);
-  auto block_dim = prim->BlockDimx(&entry_irbuilder);
-  auto grid_dim = prim->GridDimx(&entry_irbuilder);
-  auto stride = prim->Multiply(block_dim, grid_dim, &entry_irbuilder);
-  auto index = prim->Add(prim->Multiply(bidx, block_dim, &entry_irbuilder),
-                         tidx, &entry_irbuilder);
+  auto tidx = primitive_ir_emitter.ThreadIdx(&entry_irbuilder);
+  auto bidx = primitive_ir_emitter.BlockIdx(&entry_irbuilder);
+  auto block_dim = primitive_ir_emitter.BlockDimx(&entry_irbuilder);
+  auto grid_dim = primitive_ir_emitter.GridDimx(&entry_irbuilder);
+  auto stride =
+      primitive_ir_emitter.Multiply(block_dim, grid_dim, &entry_irbuilder);
+  auto index = primitive_ir_emitter.Add(
+      primitive_ir_emitter.Multiply(bidx, block_dim, &entry_irbuilder), tidx,
+      &entry_irbuilder);
 
   // Step 3: Get the body_generators for the function. There are 3
   // generators "load", "compute" and "store".
-  prim->VisitElementwiseBinary(instr);
-  auto body_generators = prim->GetPrimitiveIrGenerators();
+  primitive_ir_emitter.VisitElementwiseBinary(instr);
+  auto body_generators = primitive_ir_emitter.GetPrimitiveIrGenerators();
   auto gen_body = [&](llvm::IRBuilder<>* builder) {
     auto vals = body_generators[0].Run(IrArray{lhs, rhs, index}, builder);
     auto res = body_generators[1].Run(vals, builder);
@@ -70,12 +76,13 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
   // PrimitiveIrEmitter::For create 3 BasicBlocks, for_begin, for_body and
   // for_end. The gen_body generates ir in for_body. The function returns
   // void in for_end.
-  prim->For(index, num, stride, gen_body, &entry_irbuilder);
+  primitive_ir_emitter.For(index, num, stride, gen_body, &entry_irbuilder);
   entry_irbuilder.CreateRetVoid();
 
   // Step 5: Marking the function as kernel
   llvm::NamedMDNode* nvvm_annotations_node =
-      llvm_module_->getOrInsertNamedMetadata("nvvm.annotations");
+      IrEmitter<PrimitiveIrEmitterType>::llvm_module_->getOrInsertNamedMetadata(
+          "nvvm.annotations");
   nvvm_annotations_node->addOperand(llvm::MDNode::get(
       context, {llvm::ConstantAsMetadata::get(func),
                 llvm::MDString::get(context, "kernel"),
@@ -83,64 +90,207 @@ void GpuIrEmitter::VisitElementwiseBinary(const note::Instruction& instr) {
 }
 
 // Scalar op
-void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitConstant(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Constant is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitParameter(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitParameter(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Parameter( is unimplemented!"));
 }
 
 // Unary
-void GpuIrEmitter::VisitBroadcast(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitBroadcast(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Broadcast is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitCopy(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitCopy(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Copy is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitReshape(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitReshape(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Reshape is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitReverse(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitReverse(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Reverse is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitSlice(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitSlice(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Slice is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitTranspose(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitTranspose(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Transpose is unimplemented!"));
 }
 
 // Other
-void GpuIrEmitter::VisitSelect(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitSelect(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Select is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitConcatenate(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitConcatenate(
+    const note::Instruction& instr) {
   PADDLE_THROW(
       platform::errors::Unimplemented("Concatenate is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitReduce(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitReduce(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Reduce is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitRng(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitRng(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Rng is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitSort(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitSort(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Sort is unimplemented!"));
 }
 
-void GpuIrEmitter::VisitTuple(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitTuple(
+    const note::Instruction& instr) {
   PADDLE_THROW(platform::errors::Unimplemented("Tuple is unimplemented!"));
 }
+
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
+    const note::Instruction& instr) {
+  // get the function to call
+  auto func_ptr = instr.call_functions()[0];
+  // build Instruction map for fast retrieval
+  std::unordered_map<std::string, note::Instruction*> instrs_map;
+  for (note::Instruction& tmp_instr : func_ptr->instructions()) {
+    instrs_map[tmp_instr.name()] = &tmp_instr;
+  }
+
+  // get the return instruction and output
+  const note::Instruction& return_instr = func_ptr->return_instr();
+  // build return Instruction map
+  std::unordered_map<std::string, const note::Instruction*> return_instrs;
+  if (return_instr.opcode() == note::OpCode::kTuple) {
+    for (auto op : return_instr.operands()) {
+      return_instrs[op->name()] = op;
+    }
+  } else {
+    return_instrs[return_instr.name()] = &return_instr;
+  }
+
+  // get function args
+  std::vector<note::ElementTypeProto> args_type;
+  for (auto op : instr.operands()) {
+    args_type.push_back(op->shape().element_type());
+  }
+  if (return_instr.opcode() == note::OpCode::kTuple) {
+    for (auto op : return_instr.operands()) {
+      args_type.push_back(op->shape().element_type());
+    }
+  } else {
+    args_type.push_back(return_instr.shape().element_type());
+  }
+
+  // create function
+  auto func = CreateLLVMFunction(
+      instr.name(), args_type, IrEmitter<PrimitiveIrEmitterType>::llvm_module_);
+  auto& context = IrEmitter<PrimitiveIrEmitterType>::llvm_module_->getContext();
+  auto entry_block = llvm::BasicBlock::Create(context, "entry", func);
+  // auto exit_block = llvm::BasicBlock::Create(context, "exit", func);
+  llvm::IRBuilder<> entry_irbuilder(entry_block);
+
+  // get input args
+  auto args_it = func->arg_begin();
+  std::unordered_map<std::string, llvm::Value*> key_values;
+  for (auto op : instr.operands()) {
+    key_values[op->name()] = args_it++;
+  }
+
+  if (return_instr.opcode() == note::OpCode::kTuple) {
+    for (auto op : return_instr.operands()) {
+      key_values[op->name()] = args_it++;
+    }
+  } else {
+    key_values[return_instr.name()] = args_it++;
+  }
+
+  // get body gengerator
+  PrimitiveIrEmitterType primitive_ir_emitter(&context, func);
+  std::unordered_map<std::string, std::vector<PrimitiveIrGenerator>>
+      primitive_ir_generators;
+  for (auto element : instrs_map) {
+    element.second->Accept(&primitive_ir_emitter);
+    primitive_ir_generators[element.first] =
+        primitive_ir_emitter.GetPrimitiveIrGenerators();
+    primitive_ir_emitter.Clear();
+  }
+
+  // TODO(sunli) : sort the instruction by order
+  // auto instrs_in_order = Sort(instrs_map);
+  llvm::Value* t_index =
+      primitive_ir_emitter.GetGridThreadIndex(&entry_irbuilder);
+
+  // TODO(sunli) : check boundry
+  // ....
+
+  std::vector<note::Instruction*> instrs_in_order;
+  for (auto tmp_instr : instrs_in_order) {
+    auto ir_generator = primitive_ir_generators[tmp_instr->name()];
+    if (ir_generator.size() == 0) {
+      // TODO(sunli) : it's not clear now
+      // others instruction need for handle
+      continue;
+    }
+
+    // get input
+    IrArray input_array;
+    for (auto op : tmp_instr->operands()) {
+      if (key_values.count(op->name() + "_cached") > 0) {
+        input_array.push_back(key_values[op->name() + "_cached"]);
+      } else {
+        // TODO(sunli): load value
+        IrArray ir_array = {t_index, key_values[op->name()]};
+        input_array.push_back(
+            ir_generator[0].Run(ir_array, &entry_irbuilder)[0]);
+      }
+    }
+    // compute
+    auto output = ir_generator[1].Run(input_array, &entry_irbuilder);
+    // store
+    if (return_instrs.count(tmp_instr->name()) > 0) {
+      IrArray output_array = {output[0], key_values[tmp_instr->name()],
+                              t_index};
+      ir_generator[2](output_array, &entry_irbuilder);
+    }
+
+    // cache
+    key_values[tmp_instr->name() + "_cached"] = output[0];
+  }
+}
+
+template class GpuIrEmitter<NvptxPrimitiveIrEmitter>;
 
 }  // namespace backends
 }  // namespace piano

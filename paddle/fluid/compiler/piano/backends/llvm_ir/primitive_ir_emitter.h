@@ -33,7 +33,7 @@ class PrimitiveIrEmitter : public NoteVisitorBase<const note::Instruction&> {
   virtual void VisitElementwiseBinary(const note::Instruction&) = 0;
 
   // Scalar op
-  virtual void VisitConstant(const note::Instruction&) = 0;
+  void VisitConstant(const note::Instruction&) override{};
   // Parameter
   void VisitParameter(const note::Instruction&) override{};
 
@@ -80,7 +80,9 @@ class PrimitiveIrEmitter : public NoteVisitorBase<const note::Instruction&> {
   virtual void VisitRng(const note::Instruction&) = 0;
   virtual void VisitSort(const note::Instruction&) = 0;
   virtual void VisitTuple(const note::Instruction&) = 0;
+  virtual void VisitFusion(const note::Instruction&) = 0;
 
+  void Clear();
   std::vector<PrimitiveIrGenerator> GetPrimitiveIrGenerators();
 
   llvm::Value* Add(llvm::Value* lhs, llvm::Value* rhs,

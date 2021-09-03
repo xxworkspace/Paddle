@@ -58,7 +58,8 @@ namespace note {
   HANDLE(Reduce, "reduce", kVariadicParamNum)           \
   HANDLE(Rng, "rng", kVariadicParamNum)                 \
   HANDLE(Sort, "sort", kVariadicParamNum)               \
-  HANDLE(Tuple, "tuple", kVariadicParamNum)
+  HANDLE(Tuple, "tuple", kVariadicParamNum)             \
+  HANDLE(Fusion, "fusion", kVariadicParamNum)
 
 constexpr std::int32_t kVariadicParamNum = -1;
 

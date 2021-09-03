@@ -14,6 +14,7 @@
 #pragma once
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_ir_emitter.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_primitive_ir_emitter.h"
 
 namespace paddle {
 namespace piano {
@@ -22,11 +23,12 @@ namespace backends {
 // NvptxIrEmitter is used for note::Instruction's implementation with cudnn and
 // cublas.
 
-class NvptxIrEmitter : public GpuIrEmitter {
+class NvptxIrEmitter : public GpuIrEmitter<NvptxPrimitiveIrEmitter> {
  public:
   NvptxIrEmitter(llvm::Module* llvm_module,
                  KernelExecutableMap* kernel_executable_map)
-      : GpuIrEmitter(llvm_module, kernel_executable_map) {}
+      : GpuIrEmitter<NvptxPrimitiveIrEmitter>(llvm_module,
+                                              kernel_executable_map) {}
   ~NvptxIrEmitter() {}
 
   void VisitBatchNormGrad(const note::Instruction&) override;

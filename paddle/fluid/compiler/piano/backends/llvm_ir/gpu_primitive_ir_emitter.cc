@@ -89,6 +89,7 @@ void GpuPrimitiveIrEmitter::VisitReduce(const note::Instruction& instr) {}
 void GpuPrimitiveIrEmitter::VisitRng(const note::Instruction& instr) {}
 void GpuPrimitiveIrEmitter::VisitSort(const note::Instruction& instr) {}
 void GpuPrimitiveIrEmitter::VisitTuple(const note::Instruction& instr) {}
+void GpuPrimitiveIrEmitter::VisitFusion(const note::Instruction& instr) {}
 
 }  // namespace backends
 }  // namespace piano

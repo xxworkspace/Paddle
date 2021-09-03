@@ -34,6 +34,7 @@ namespace backends {
 // Each time VisitXXX will translate one note::Instruction with type OpCode::XXX
 // into a kernel with llvm IR.
 
+template <typename PrimitiveIrEmitterType>
 class IrEmitter : public NoteVisitorBase<const note::Instruction&> {
  public:
   IrEmitter(llvm::Module* llvm_module,
@@ -95,6 +96,9 @@ class IrEmitter : public NoteVisitorBase<const note::Instruction&> {
   virtual void VisitRng(const note::Instruction&) = 0;
   virtual void VisitSort(const note::Instruction&) = 0;
   virtual void VisitTuple(const note::Instruction&) = 0;
+
+  // fusion
+  virtual void VisitFusion(const note::Instruction&) = 0;
 
  protected:
   llvm::Module* llvm_module_{nullptr};

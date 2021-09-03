@@ -25,6 +25,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_executable.h"
+#include "paddle/fluid/compiler/piano/backends/llvm_ir/nvptx_ir_emitter.h"
 #include "paddle/fluid/platform/dynload/cuda_driver.h"
 #include "paddle/fluid/platform/enforce.h"
 #include "paddle/fluid/platform/errors.h"
@@ -165,6 +166,24 @@ static CumodulePool& cumodule_pool_init = CumodulePool::Instance();
 
 void NvptxCompiler::Optimize(note::Module*) {
   // TODO(sunli) : optimize pass
+}
+
+void NvptxCompiler::ConvertToIr(const note::Module& note_module,
+                                llvm::Module* llvm_module,
+                                KernelExecutableMap* kernel_executable_map) {
+  // ir emitter
+  NvptxIrEmitter nvptx_ir_emitter(llvm_module, kernel_executable_map);
+
+  // get entry function
+  auto& entry_function = note_module.entry_function();
+
+  // get instruction in entry_function
+  auto instructions = entry_function.instructions();
+
+  // generate llvm ir for each instruction
+  for (auto& instr : instructions) {
+    instr.Accept(&nvptx_ir_emitter);
+  }
 }
 
 void NvptxCompiler::Compile(const note::Module& note_module,
