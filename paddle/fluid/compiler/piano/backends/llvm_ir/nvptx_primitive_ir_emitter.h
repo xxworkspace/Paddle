@@ -47,6 +47,7 @@ class NvptxPrimitiveIrEmitter : public GpuPrimitiveIrEmitter {
   llvm::Value* GetGridBlockIndex(llvm::IRBuilder<>*) override;
   llvm::Value* GetBlockWarpIndex(llvm::IRBuilder<>*) override;
   llvm::Value* GetBlockSize(llvm::IRBuilder<>*) override;
+  llvm::Value* GetThreadCount(llvm::IRBuilder<>*) override;
 };
 
 }  // namespace backends

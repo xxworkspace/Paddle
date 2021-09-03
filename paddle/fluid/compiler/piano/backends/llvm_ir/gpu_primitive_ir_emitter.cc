@@ -55,9 +55,13 @@ void GpuPrimitiveIrEmitter::VisitElementwiseBinary(
   primitive_ir_generators_.emplace_back(
       "Load_" + instr.name(), "LOAD",
       [this](IrArray llvm_values, llvm::IRBuilder<>* llvm_builder) {
-        // (lhs, rhs, index) = llvm_values[0:3]
-        return IrArray{Load(llvm_values[0], llvm_values[2], llvm_builder),
-                       Load(llvm_values[1], llvm_values[2], llvm_builder)};
+        // (index, ptr) = llvm_values[0:3]
+        IrArray ir_array;
+        for (uint32_t idx = 0; idx < llvm_values.size(); ++idx) {
+          ir_array.push_back(
+              Load(llvm_values[0], llvm_values[idx], llvm_builder));
+        }
+        return ir_array;
       });
   // Compute
   primitive_ir_generators_.emplace_back(

@@ -62,6 +62,7 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseBinary(
   PrimitiveIrEmitterType primitive_ir_emitter(&context, func);
 
   // Get thread id and this part will be added to BasicBlock "entry"
+  auto num = entry_irbuilder.getInt32(element_count);
   auto tidx = primitive_ir_emitter.ThreadIdx(&entry_irbuilder);
   auto bidx = primitive_ir_emitter.BlockIdx(&entry_irbuilder);
   auto block_dim = primitive_ir_emitter.BlockDimx(&entry_irbuilder);
@@ -77,7 +78,7 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseBinary(
   primitive_ir_emitter.VisitElementwiseBinary(instr);
   auto body_generators = primitive_ir_emitter.GetPrimitiveIrGenerators();
   auto gen_body = [&](llvm::IRBuilder<>* builder) {
-    auto vals = body_generators[0].Run(IrArray{lhs, rhs, index}, builder);
+    auto vals = body_generators[0].Run(IrArray{index, lhs, rhs}, builder);
     auto res = body_generators[1].Run(vals, builder);
     body_generators[2].Run(IrArray{res[0], out, index}, builder);
   };
@@ -100,7 +101,9 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitElementwiseBinary(
 }
 
 // Scalar op
-void GpuIrEmitter::VisitConstant(const note::Instruction& instr) {
+template <typename PrimitiveIrEmitterType>
+void GpuIrEmitter<PrimitiveIrEmitterType>::VisitConstant(
+    const note::Instruction& instr) {
   // Constant Instruction Do Nothing.
 }
 
@@ -226,8 +229,11 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
       instr.name(), args_type, IrEmitter<PrimitiveIrEmitterType>::llvm_module_);
   auto& context = IrEmitter<PrimitiveIrEmitterType>::llvm_module_->getContext();
   auto entry_block = llvm::BasicBlock::Create(context, "entry", func);
-  // auto exit_block = llvm::BasicBlock::Create(context, "exit", func);
+  auto body_block = llvm::BasicBlock::Create(context, "body", func);
+  auto exit_block = llvm::BasicBlock::Create(context, "exit", func);
   llvm::IRBuilder<> entry_irbuilder(entry_block);
+  llvm::IRBuilder<> body_irbuilder(body_block);
+  llvm::IRBuilder<> exit_irbuilder(exit_block);
 
   // get input args
   auto args_it = func->arg_begin();
@@ -255,13 +261,29 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
     primitive_ir_emitter.Clear();
   }
 
+  uint32_t num_element = 0;
+  if (return_instr.opcode() == note::OpCode::kTuple) {
+    auto tuple_shape = return_instr.shape().tuple_shapes();
+    for (auto shape : tuple_shape) {
+      uint32_t num = 1;
+      for (auto dim : shape.dimensions()) {
+        num *= dim;
+      }
+      num_element = std::max(num_element, num);
+    }
+  } else {
+    for (auto dim : return_instr.shape().dimensions()) {
+      num_element *= dim;
+    }
+  }
   // TODO(sunli) : sort the instruction by order
   // auto instrs_in_order = Sort(instrs_map);
   llvm::Value* t_index =
       primitive_ir_emitter.GetGridThreadIndex(&entry_irbuilder);
-
+  llvm::Value* element_count = entry_irbuilder.getInt32(num_element);
   // TODO(sunli) : check boundry
-  // ....
+  auto cond = entry_irbuilder.CreateICmpULT(t_index, element_count);
+  entry_irbuilder.CreateCondBr(cond, body_block, exit_block);
 
   std::vector<note::Instruction*> instrs_in_order;
   for (auto tmp_instr : instrs_in_order) {
@@ -281,21 +303,24 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
         // TODO(sunli): load value
         IrArray ir_array = {t_index, key_values[op->name()]};
         input_array.push_back(
-            ir_generator[0].Run(ir_array, &entry_irbuilder)[0]);
+            ir_generator[0].Run(ir_array, &body_irbuilder)[0]);
       }
     }
     // compute
-    auto output = ir_generator[1].Run(input_array, &entry_irbuilder);
+    auto output = ir_generator[1].Run(input_array, &body_irbuilder);
     // store
     if (return_instrs.count(tmp_instr->name()) > 0) {
       IrArray output_array = {output[0], key_values[tmp_instr->name()],
                               t_index};
-      ir_generator[2](output_array, &entry_irbuilder);
+      ir_generator[2](output_array, &body_irbuilder);
     }
 
     // cache
     key_values[tmp_instr->name() + "_cached"] = output[0];
   }
+
+  body_irbuilder.CreateBr(exit_block);
+  exit_irbuilder.CreateRetVoid();
 }
 
 template class GpuIrEmitter<NvptxPrimitiveIrEmitter>;

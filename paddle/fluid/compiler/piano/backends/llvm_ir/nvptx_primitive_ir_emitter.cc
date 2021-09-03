@@ -99,12 +99,28 @@ llvm::Value* NvptxPrimitiveIrEmitter::Alloca(llvm::IRBuilder<>* ir_builder,
   return nullptr;
 }
 
-llvm::Value* NvptxPrimitiveIrEmitter::GetGridThreadIndex(llvm::IRBuilder<>*) {
-  return nullptr;
+llvm::Value* NvptxPrimitiveIrEmitter::GetGridThreadIndex(
+    llvm::IRBuilder<>* ir_builder) {
+  // (blockIdx.y*blockDim.y + threadIdx.y) * (blockDim.x * gridDim.x) +
+  // blockDim.x * blockIdx.x + threadIdx.x;
+  auto row_size =
+      ir_builder->CreateMul(BlockDimx(ir_builder), GridDimx(ir_builder));
+  auto col = ir_builder->CreateAdd(
+      ir_builder->CreateMul(BlockIdy(ir_builder), BlockDimy(ir_builder)),
+      ThreadIdy(ir_builder));
+  return ir_builder->CreateAdd(
+      ir_builder->CreateAdd(
+          ir_builder->CreateMul(row_size, col),
+          ir_builder->CreateMul(BlockDimx(ir_builder), BlockIdx(ir_builder))),
+      ThreadIdx(ir_builder));
 }
 
-llvm::Value* NvptxPrimitiveIrEmitter::GetBlockThreadIndex(llvm::IRBuilder<>*) {
-  return nullptr;
+llvm::Value* NvptxPrimitiveIrEmitter::GetBlockThreadIndex(
+    llvm::IRBuilder<>* ir_builder) {
+  // blockDim.x * blockIdx.y + threadIdx.x
+  return ir_builder->CreateAdd(
+      ir_builder->CreateMul(BlockDimx(ir_builder), BlockIdy(ir_builder)),
+      ThreadIdx(ir_builder));
 }
 
 llvm::Value* NvptxPrimitiveIrEmitter::GetWarpThreadIndex(llvm::IRBuilder<>*) {
@@ -119,8 +135,17 @@ llvm::Value* NvptxPrimitiveIrEmitter::GetBlockWarpIndex(llvm::IRBuilder<>*) {
   return nullptr;
 }
 
-llvm::Value* NvptxPrimitiveIrEmitter::GetBlockSize(llvm::IRBuilder<>*) {
-  return nullptr;
+llvm::Value* NvptxPrimitiveIrEmitter::GetBlockSize(
+    llvm::IRBuilder<>* ir_builder) {
+  return ir_builder->CreateMul(BlockDimx(ir_builder), BlockDimy(ir_builder));
+}
+
+llvm::Value* NvptxPrimitiveIrEmitter::GetThreadCount(
+    llvm::IRBuilder<>* ir_builder) {
+  // GridDimx * blockDimx * GridDimy * BlockDimy
+  return ir_builder->CreateMul(
+      ir_builder->CreateMul(BlockDimy(ir_builder), GridDimy(ir_builder)),
+      ir_builder->CreateMul(BlockDimx(ir_builder), GridDimx(ir_builder)));
 }
 
 }  // namespace backends

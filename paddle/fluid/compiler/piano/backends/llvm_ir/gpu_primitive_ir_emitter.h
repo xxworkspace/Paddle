@@ -79,6 +79,7 @@ class GpuPrimitiveIrEmitter : public PrimitiveIrEmitter {
   virtual llvm::Value* GetGridBlockIndex(llvm::IRBuilder<>*) = 0;
   virtual llvm::Value* GetBlockWarpIndex(llvm::IRBuilder<>*) = 0;
   virtual llvm::Value* GetBlockSize(llvm::IRBuilder<>*) = 0;
+  virtual llvm::Value* GetThreadCount(llvm::IRBuilder<>*) = 0;
 };
 
 }  // namespace backends
