@@ -7,3 +7,8 @@ cc_test(piano_op_registry_test SRCS piano_op_registry_test.cc DEPS piano_op_regi
 
 cc_library(piano_op_kernel_context SRCS piano_op_kernel_context.cc DEPS piano_op_registry proto_desc piano_symbolization_builder)
 cc_test(piano_op_kernel_context_test SRCS piano_op_kernel_context_test.cc DEPS piano_op_kernel_context op_registry)
+
+cc_library(vartype_utils SRCS vartype_utils.cc DEPS proto_desc data_type note_proto)
+
+cc_library(piano_graph_executor SRCS piano_graph_executor.cc DEPS piano_op_kernel_context piano_symbolization_meat_op vartype_utils)
+cc_test(piano_graph_executor_test SRCS piano_graph_executor_test.cc DEPS piano_graph_executor node vartype_utils)

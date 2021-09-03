@@ -15,7 +15,10 @@ limitations under the License. */
 #pragma once
 
 #include <cstdint>
+#include <functional>
+#include <numeric>
 #include <string>
+#include <utility>
 #include <vector>
 #include "paddle/fluid/compiler/piano/layout.h"
 #include "paddle/fluid/compiler/piano/note/note.pb.h"
@@ -57,6 +60,15 @@ class Shape {
         platform::errors::InvalidArgument(
             "Non-array do not have a rank, shape: %s", ToString()));
     return dimensions_.size();
+  }
+
+  int64_t Numel() const {
+    if (IsTuple()) {
+      return tuple_shapes_.size();
+    } else {
+      return std::accumulate(std::begin(dimensions()), std::end(dimensions()),
+                             1, std::multiplies<int64_t>());
+    }
   }
 
   // Returns whether the shape is of the specified type

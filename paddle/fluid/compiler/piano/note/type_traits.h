@@ -224,6 +224,29 @@ class UnboxingIterator : public ForwardIterator<SmartPtrIter> {
   SmartPtrIter iter_;
 };
 
+template <typename T, typename... AllType>
+struct IsOneOf : public std::false_type {};
+
+template <typename T, typename FrontType, typename... RestType>
+struct IsOneOf<T, FrontType, RestType...>
+    : public std::conditional<std::is_same<T, FrontType>::value, std::true_type,
+                              IsOneOf<T, RestType...>>::type {};
+
+template <typename T, typename VariantType>
+struct IsVariantMember;
+
+template <typename T, typename... AllType>
+struct IsVariantMember<T, boost::variant<AllType...>>
+    : public IsOneOf<T, AllType...> {};
+
+template <typename T>
+struct IsOneOfAttrType : public IsVariantMember<T, AttrType> {};
+
+template <typename T>
+struct IsVector : public std::false_type {};
+template <typename T, typename A>
+struct IsVector<std::vector<T, A>> : public std::true_type {};
+
 }  // namespace note
 }  // namespace piano
 }  // namespace paddle
