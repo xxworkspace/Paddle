@@ -196,13 +196,18 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
     const note::Instruction& instr) {
   // get the function to call
   auto func_ptr = instr.call_functions()[0];
-  // build Instruction map for fast retrieval
-  std::unordered_map<std::string, note::Instruction*> instrs_map;
-  for (note::Instruction& tmp_instr : func_ptr->instructions()) {
-    instrs_map[tmp_instr.name()] = &tmp_instr;
+  // note::Instruction map for fast retrieval without kParameter
+  std::vector<note::Instruction*> parameters;
+  std::unordered_map<std::string, note::Instruction*> instr_map;
+  for (note::Instruction& _instr : func_ptr->instructions()) {
+    if (_instr.opcode() != note::OpCode::kParameter) {
+      instr_map[_instr.name()] = &_instr;
+    } else {
+      parameters.push_back(&_instr);
+    }
   }
 
-  // get the return instruction and output
+  // the return instruction and output
   const note::Instruction& return_instr = func_ptr->return_instr();
   // build return Instruction map
   std::unordered_map<std::string, const note::Instruction*> return_instrs;
@@ -230,8 +235,10 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
   }
 
   // create function
+  auto kernel_name =
+      note::GetOpName(instr.opcode()) + "_" + std::to_string(instr.global_id());
   auto func = CreateLLVMFunction(
-      instr.name(), args_type, IrEmitter<PrimitiveIrEmitterType>::llvm_module_);
+      kernel_name, args_type, IrEmitter<PrimitiveIrEmitterType>::llvm_module_);
   auto& context = IrEmitter<PrimitiveIrEmitterType>::llvm_module_->getContext();
   auto entry_block = llvm::BasicBlock::Create(context, "entry", func);
   auto body_block = llvm::BasicBlock::Create(context, "body", func);
@@ -242,11 +249,17 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
 
   // get input args
   auto args_it = func->arg_begin();
+  std::vector<llvm::Value*> input_args;
   std::unordered_map<std::string, llvm::Value*> key_values;
-  for (auto op : instr.operands()) {
-    key_values[op->name()] = args_it++;
+  for (uint32_t idx = 0; idx < parameters.size(); ++idx) {
+    input_args.push_back(args_it++);
+  }
+  // get parameter
+  for (auto parameter : parameters) {
+    key_values[parameter->name()] = input_args[parameter->parameter_index()];
   }
 
+  // get output
   if (return_instr.opcode() == note::OpCode::kTuple) {
     for (auto op : return_instr.operands()) {
       key_values[op->name()] = args_it++;
@@ -259,9 +272,9 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
   PrimitiveIrEmitterType primitive_ir_emitter(&context, func);
   std::unordered_map<std::string, std::vector<PrimitiveIrGenerator>>
       primitive_ir_generators;
-  for (auto element : instrs_map) {
-    element.second->Accept(&primitive_ir_emitter);
-    primitive_ir_generators[element.first] =
+  for (auto _instr : instr_map) {
+    _instr.second->Accept(&primitive_ir_emitter);
+    primitive_ir_generators[_instr.first] =
         primitive_ir_emitter.GetPrimitiveIrGenerators();
     primitive_ir_emitter.Clear();
   }
@@ -291,30 +304,29 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
   auto cond = entry_irbuilder.CreateICmpULT(t_index, element_count);
   entry_irbuilder.CreateCondBr(cond, body_block, exit_block);
 
-  std::vector<note::Instruction*> instrs_in_order = [&instrs_map,
+  std::vector<note::Instruction*> instrs_in_order = [&instr_map,
                                                      &return_instr]() {
-    std::unordered_map<std::string, int32_t> instr_count;
-    for (auto& tmp : instrs_map) {
-      for (auto op : tmp.second->operands()) {
-        if (instr_count.count(op->name()) == 0) {
-          instr_count[op->name()] = 1;
+    std::unordered_map<note::Instruction*, int32_t> instr_count;
+    for (auto& _instr : instr_map) {
+      for (auto op : _instr.second->operands()) {
+        if (instr_count.count(op) == 0) {
+          instr_count[op] = 1;
         } else {
-          instr_count[op->name()]++;
+          instr_count[op]++;
         }
       }
     }
 
-    instr_count[return_instr.name()] = 0;
+    instr_count[const_cast<note::Instruction*>(&return_instr)] = 0;
     std::vector<note::Instruction*> instrs_in_order;
-    while (instrs_in_order.size() < instrs_map.size()) {
-      for (auto& tmp : instr_count) {
-        if (tmp.second == 0) {
-          tmp.second--;
-          auto& instr_ptr = instrs_map[tmp.first];
-          for (auto& op : instr_ptr->operands()) {
-            instr_count[op->name()]--;
+    while (instrs_in_order.size() < instr_map.size()) {
+      for (auto& _instr : instr_count) {
+        if (_instr.second == 0) {
+          _instr.second--;
+          for (auto& op : _instr.first->operands()) {
+            instr_count[op]--;
           }
-          instrs_in_order.push_back(instr_ptr);
+          instrs_in_order.push_back(_instr.first);
         }
       }
     }
@@ -323,8 +335,8 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
     return instrs_in_order;
   }();
 
-  for (auto tmp_instr : instrs_in_order) {
-    auto ir_generator = primitive_ir_generators[tmp_instr->name()];
+  for (auto _instr : instrs_in_order) {
+    auto ir_generator = primitive_ir_generators[_instr->name()];
     if (ir_generator.size() == 0) {
       // TODO(sunli) : it's not clear now
       // others instruction need for handle
@@ -333,7 +345,7 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
 
     // get input
     IrArray input_array;
-    for (auto op : tmp_instr->operands()) {
+    for (auto op : _instr->operands()) {
       if (key_values.count(op->name() + "_cached") > 0) {
         input_array.push_back(key_values[op->name() + "_cached"]);
       } else {
@@ -347,21 +359,29 @@ void GpuIrEmitter<PrimitiveIrEmitterType>::VisitFusion(
     // compute
     auto output = ir_generator[1].Run(input_array, &body_irbuilder);
     // store
-    if (return_instrs.count(tmp_instr->name()) > 0) {
-      IrArray output_array = {output[0], key_values[tmp_instr->name()],
-                              t_index};
+    if (return_instrs.count(_instr->name()) > 0) {
+      IrArray output_array = {output[0], key_values[_instr->name()], t_index};
       ir_generator[2](output_array, &body_irbuilder);
     }
 
     // cache the value into value map
-    key_values[tmp_instr->name() + "_cached"] = output[0];
+    key_values[_instr->name() + "_cached"] = output[0];
   }
 
   body_irbuilder.CreateBr(exit_block);
   exit_irbuilder.CreateRetVoid();
 
-  IrEmitter<PrimitiveIrEmitterType>::llvm_module_->print(llvm::errs(), nullptr);
-  exit(0);
+  // Marking the function as kernel
+  llvm::NamedMDNode* nvvm_annotations_node =
+      IrEmitter<PrimitiveIrEmitterType>::llvm_module_->getOrInsertNamedMetadata(
+          "nvvm.annotations");
+  nvvm_annotations_node->addOperand(llvm::MDNode::get(
+      context, {llvm::ConstantAsMetadata::get(func),
+                llvm::MDString::get(context, "kernel"),
+                llvm::ConstantAsMetadata::get(entry_irbuilder.getInt32(1))}));
+
+  // IrEmitter<PrimitiveIrEmitterType>::llvm_module_->print(llvm::errs(),
+  // nullptr);
 }
 
 template class GpuIrEmitter<NvptxPrimitiveIrEmitter>;

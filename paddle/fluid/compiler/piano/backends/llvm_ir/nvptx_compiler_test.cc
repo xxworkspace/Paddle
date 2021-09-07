@@ -233,7 +233,55 @@ TEST(NvptxCompiler, Fusion) {
       auto func = module_proto.add_functions();
       func->set_name("fusion_func");
       func->set_id(11);
-      func->set_return_id(107);
+      func->set_return_id(111);
+
+      {
+        auto param = func->add_instructions();
+        param->set_name("parameter0");
+        param->set_opcode("parameter");
+        auto shape = param->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        param->set_id(105);
+        param->set_parameter_index(0);
+      }
+
+      {
+        auto param = func->add_instructions();
+        param->set_name("parameter1");
+        param->set_opcode("parameter");
+        auto shape = param->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        param->set_id(106);
+        param->set_parameter_index(1);
+      }
+
+      {
+        auto param = func->add_instructions();
+        param->set_name("parameter2");
+        param->set_opcode("parameter");
+        auto shape = param->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        param->set_id(107);
+        param->set_parameter_index(2);
+      }
+
+      {
+        auto param = func->add_instructions();
+        param->set_name("parameter3");
+        param->set_opcode("parameter");
+        auto shape = param->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        param->set_id(108);
+        param->set_parameter_index(3);
+      }
 
       {
         auto add = func->add_instructions();
@@ -243,9 +291,9 @@ TEST(NvptxCompiler, Fusion) {
         shape->set_element_type(note::ElementTypeProto::F32);
         shape->add_dimensions(1);
         shape->add_dimensions(32);
-        add->set_id(105);
-        add->add_operand_ids(101);
-        add->add_operand_ids(102);
+        add->set_id(109);
+        add->add_operand_ids(105);
+        add->add_operand_ids(106);
       }
 
       {
@@ -256,9 +304,9 @@ TEST(NvptxCompiler, Fusion) {
         shape->set_element_type(note::ElementTypeProto::F32);
         shape->add_dimensions(1);
         shape->add_dimensions(32);
-        add->set_id(106);
-        add->add_operand_ids(103);
-        add->add_operand_ids(105);
+        add->set_id(110);
+        add->add_operand_ids(107);
+        add->add_operand_ids(109);
       }
 
       {
@@ -269,9 +317,9 @@ TEST(NvptxCompiler, Fusion) {
         shape->set_element_type(note::ElementTypeProto::F32);
         shape->add_dimensions(1);
         shape->add_dimensions(32);
-        add->set_id(107);
-        add->add_operand_ids(104);
-        add->add_operand_ids(106);
+        add->set_id(111);
+        add->add_operand_ids(108);
+        add->add_operand_ids(110);
       }
     }
 
@@ -354,6 +402,62 @@ TEST(NvptxCompiler, Fusion) {
   std::cout << note_module.ToString() << std::endl;
   NvptxCompiler nvptx_compiler;
   nvptx_compiler.Apply(&note_module);
+
+  // set device
+  platform::SetDeviceId(0);
+  // TestExecutable
+  auto&& instrs = note_module.entry_function().instructions();
+  note::Instruction* fusion_instr;
+  for (auto& _instr : instrs) {
+    if (_instr.global_id() == 100) {
+      fusion_instr = &_instr;
+      break;
+    }
+  }
+  NvptxExecutable executable(note_module.name(), dim3(1), dim3(32), 0,
+                             *fusion_instr);
+
+  float host_a[32], host_b[32], host_c[32], host_d[32], host_e[32];
+  for (int idx = 0; idx < 32; ++idx) {
+    host_a[idx] = static_cast<float>(3.14f);
+    host_b[idx] = static_cast<float>(3.14f);
+    host_c[idx] = static_cast<float>(3.14f);
+    host_d[idx] = static_cast<float>(3.14f);
+  }
+
+  float *dev_a = nullptr, *dev_b = nullptr, *dev_c = nullptr, *dev_d = nullptr,
+        *dev_e = nullptr;
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_a, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_b, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_c, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_d, 32 * sizeof(float)));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaMalloc(&dev_e, 32 * sizeof(float)));
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_a, host_a, sizeof(float) * 32, cudaMemcpyHostToDevice));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_b, host_b, sizeof(float) * 32, cudaMemcpyHostToDevice));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_c, host_c, sizeof(float) * 32, cudaMemcpyHostToDevice));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(dev_d, host_d, sizeof(float) * 32, cudaMemcpyHostToDevice));
+
+  std::vector<void*> args = {&dev_a, &dev_b, &dev_c, &dev_d, &dev_e};
+  executable.Launch(args, nullptr);
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaStreamSynchronize(nullptr));
+  PADDLE_ENFORCE_CUDA_SUCCESS(
+      cudaMemcpy(host_e, dev_e, sizeof(float) * 32, cudaMemcpyDeviceToHost));
+
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_a));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_b));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_c));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_d));
+  PADDLE_ENFORCE_CUDA_SUCCESS(cudaFree(dev_e));
+
+  for (int idx = 0; idx < 32; ++idx) {
+    ASSERT_EQ(host_e[idx], 4.0 * 3.14f);
+  }
 }
 
 }  // namespace backends
