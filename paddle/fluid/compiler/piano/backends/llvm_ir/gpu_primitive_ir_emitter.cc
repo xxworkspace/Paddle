@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/gpu_primitive_ir_emitter.h"
+#include "llvm/IR/Constants.h"
 #include "paddle/fluid/compiler/piano/backends/llvm_ir/primitive_ir_emitter.h"
 #include "paddle/fluid/compiler/piano/note/element_type_util.h"
 #include "paddle/fluid/compiler/piano/note/instruction.h"
@@ -57,9 +58,9 @@ void GpuPrimitiveIrEmitter::VisitElementwiseBinary(
       [this](IrArray llvm_values, llvm::IRBuilder<>* llvm_builder) {
         // (index, ptr) = llvm_values[0:3]
         IrArray ir_array;
-        for (uint32_t idx = 0; idx < llvm_values.size(); ++idx) {
+        for (uint32_t idx = 1; idx < llvm_values.size(); ++idx) {
           ir_array.push_back(
-              Load(llvm_values[0], llvm_values[idx], llvm_builder));
+              Load(llvm_values[idx], llvm_values[0], llvm_builder));
         }
         return ir_array;
       });
@@ -81,7 +82,36 @@ void GpuPrimitiveIrEmitter::VisitElementwiseBinary(
 }
 
 // Scalar op
-void GpuPrimitiveIrEmitter::VisitConstant(const note::Instruction& instr) {}
+void GpuPrimitiveIrEmitter::VisitConstant(const note::Instruction& instr) {
+  primitive_ir_generators_.emplace_back(
+      "Load_" + instr.name(), "LOAD",
+      [](IrArray llvm_values, llvm::IRBuilder<>* llvm_builder) {
+        return IrArray();
+      });
+  // Compute
+  primitive_ir_generators_.emplace_back(
+      "Compute_" + instr.name(), "COMPUTE",
+      [this, &instr](IrArray llvm_values, llvm::IRBuilder<>* llvm_builder) {
+        switch (instr.shape().element_type()) {
+          case note::ElementTypeProto::U16:
+            return IrArray{llvm_builder->getInt16(0)};
+          case note::ElementTypeProto::U32:
+            return IrArray{llvm_builder->getInt32(0)};
+          case note::ElementTypeProto::F32:
+            return IrArray{llvm::ConstantFP::get(llvm_builder->getContext(),
+                                                 llvm::APFloat(0.0f))};
+          default:
+            PADDLE_THROW(platform::errors::Unimplemented(
+                "Parameter( is unimplemented!"));
+        }
+      });
+  // Store
+  primitive_ir_generators_.emplace_back(
+      "Store_" + instr.name(), "STORE",
+      [](IrArray llvm_values, llvm::IRBuilder<>* llvm_builder) {
+        return IrArray();
+      });
+}
 
 // Unary
 void GpuPrimitiveIrEmitter::VisitBroadcast(const note::Instruction& instr) {}

@@ -220,6 +220,142 @@ TEST(NvptxCompiler, Apply) {
   }
 }
 
+TEST(NvptxCompiler, Fusion) {
+  note::ModuleProto module_proto;
+  {
+    // module
+    module_proto.set_name("test_builder");
+    module_proto.set_entry_function_name("entry_func");
+    module_proto.set_id(0);
+    module_proto.set_entry_function_id(10);
+    // fusion function
+    {
+      auto func = module_proto.add_functions();
+      func->set_name("fusion_func");
+      func->set_id(11);
+      func->set_return_id(107);
+
+      {
+        auto add = func->add_instructions();
+        add->set_name("add0");
+        add->set_opcode("add");
+        auto shape = add->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        add->set_id(105);
+        add->add_operand_ids(101);
+        add->add_operand_ids(102);
+      }
+
+      {
+        auto add = func->add_instructions();
+        add->set_name("add1");
+        add->set_opcode("add");
+        auto shape = add->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        add->set_id(106);
+        add->add_operand_ids(103);
+        add->add_operand_ids(105);
+      }
+
+      {
+        auto add = func->add_instructions();
+        add->set_name("add2");
+        add->set_opcode("add");
+        auto shape = add->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        add->set_id(107);
+        add->add_operand_ids(104);
+        add->add_operand_ids(106);
+      }
+    }
+
+    {
+      // entry function
+      auto entry_func = module_proto.add_functions();
+      entry_func->set_name("entry_func");
+      entry_func->set_id(10);
+      entry_func->set_return_id(100);
+
+      // constant 0
+      {
+        auto constant = entry_func->add_instructions();
+        constant->set_name("input0");
+        constant->set_opcode("constant");
+        auto shape = constant->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        constant->set_id(101);
+      }
+
+      // constant 1
+      {
+        auto constant = entry_func->add_instructions();
+        constant->set_name("input1");
+        constant->set_opcode("constant");
+        auto shape = constant->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        constant->set_id(102);
+      }
+
+      // constant 2
+      {
+        auto constant = entry_func->add_instructions();
+        constant->set_name("input2");
+        constant->set_opcode("constant");
+        auto shape = constant->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        constant->set_id(103);
+      }
+
+      // constant 3
+      {
+        auto constant = entry_func->add_instructions();
+        constant->set_name("input3");
+        constant->set_opcode("constant");
+        auto shape = constant->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        constant->set_id(104);
+      }
+
+      // fusion instruction
+      {
+        auto element_wise = entry_func->add_instructions();
+        element_wise->set_name("element_wise");
+        element_wise->set_opcode("fusion");
+        auto shape = element_wise->mutable_shape();
+        shape->set_element_type(note::ElementTypeProto::F32);
+        shape->add_dimensions(1);
+        shape->add_dimensions(32);
+        element_wise->set_id(100);
+        element_wise->add_call_function_ids(11);
+        element_wise->add_operand_ids(101);
+        element_wise->add_operand_ids(102);
+        element_wise->add_operand_ids(103);
+        element_wise->add_operand_ids(104);
+      }
+    }
+  }
+  LOG(INFO) << module_proto.DebugString();
+
+  note::Module note_module(module_proto);
+  std::cout << note_module.ToString() << std::endl;
+  NvptxCompiler nvptx_compiler;
+  nvptx_compiler.Apply(&note_module);
+}
+
 }  // namespace backends
 }  // namespace piano
 }  // namespace paddle
