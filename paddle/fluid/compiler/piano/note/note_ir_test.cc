@@ -264,7 +264,7 @@ TEST_F(IrTest, InstructionDetails) {
   ASSERT_EQ(instr.shape().Rank(), 2);
   DummyVisitor visitor;
   instr.Accept(&visitor);
-  ASSERT_EQ(visitor.state(), "yes");
+  ASSERT_EQ(visitor.state(), "no");
   Instruction* mutable_instr = func->instruction(1);
   EXPECT_THROW(mutable_instr->mutable_operand(0), platform::EnforceNotMet);
   mutable_instr->Accept(&visitor);
